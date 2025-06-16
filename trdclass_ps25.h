@@ -298,7 +298,7 @@ public :
   */ 
    TH2F *htgem_xy, *hmmg1_xy, *hqgem_xy;
    TH2F *tgem_mmg1_xcorr, *tgem_mmg1_max_xcorr, *tgem_mmg1_ycorr, *tgem_qgem_xcorr, *urw_qgem_xcorr, *urw_tgem_xcorr;
-   TH2F *tgem_gt1_xcorr, *tgem_gt2_xcorr, *tgem_gt3_xcorr, *mmg1_gt1_xcorr, *mmg1_gt2_xcorr, *mmg1_gt3_xcorr;
+   TH2F *tgem_gt1_xcorr, *tgem_gt2_xcorr, *tgem_gt3_xcorr, *mmg1_gt1_xcorr, *mmg1_gt2_xcorr, *mmg1_gt3_xcorr, *qgem_gt1_xcorr, *qgem_gt2_xcorr, *qgem_gt3_xcorr;
    TH1F *hgemClusterDiff_el, *hmmg1ClusterDiff_el;
    TH1F *hgemPulseDiff_el, *hmmg1PulseDiff_el;
    TH1F *hClusterMaxdEdx_el, *hClusterTotaldEdx_el;
@@ -309,7 +309,7 @@ public :
    //TH1F *hmmg1_peak_y_height_el, *htgem_peak_y_height_el;
    TH2F *hgemtrkr_1_peak_xy, *hgemtrkr_2_peak_xy, *hgemtrkr_3_peak_xy;
    TH2F *hgemtrkr_1_max_xy, *hgemtrkr_2_max_xy, *hgemtrkr_3_max_xy;
-   TH2F *hgemtrkr_1_tgem, *hgemtrkr_1_mmg1;
+   TH2F *hgemtrkr_1_tgem, *hgemtrkr_1_mmg1, *hgemtrkr_1_qgem;
    TH1F *hgemtrkr_1_max_xch, *hgemtrkr_1_max_xamp, *hgemtrkr_2_max_xch, *hgemtrkr_2_max_xamp, *hgemtrkr_3_max_xch, *hgemtrkr_3_max_xamp;
    
    TH1F *f125_el, *f125_el_max;
@@ -323,9 +323,10 @@ public :
    TH2F *mmg1_f125_el_amp2d, *mmg1_f125_el_amp2ds;
    TH2F *urw_f125_x_amp2d, *urw_f125_x_amp2ds, *urw_f125_y_amp2d, *urw_f125_y_amp2ds, *hurw_xy, *hurw_max_xy;
    TH2F *mmg1_f125_fit, *urw_f125_fit, *qgem_f125_fit;
+   TH2F *f125_xVSamp, *qgem_f125_xVSamp, *mmg1_f125_xVSamp, *urw_f125_xVSamp, *urw_f125_yVSamp;
    
    //TH2F *gem_el_eff, *gem_pi_eff, *mmg1_el_eff, *mmg1_pi_eff;
-   TH2F *tgem_mmg1_doubleX, *tgem_mmg1_doubleY;
+   TH2F *tgem_mmg1_doubleX, *tgem_mmg1_doubleY, *tgem_qgem_doubleY;
    TH2F *mhevt, *mhevtc, *mhevti, *mhevtf, *hevt, *hevtc, *hevti, *hevtf, *hevtk, *hevtck;
    
    //----- EVENT STRUCTURE -----
