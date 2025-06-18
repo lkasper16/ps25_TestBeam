@@ -297,7 +297,7 @@ public :
    TH2F *hCal_Presh, *hCal_Cher;
   */ 
    TH2F *htgem_xy, *hmmg1_xy, *hqgem_xy;
-   TH2F *tgem_mmg1_xcorr, *tgem_mmg1_max_xcorr, *tgem_mmg1_ycorr, *tgem_qgem_xcorr, *urw_qgem_xcorr, *urw_tgem_xcorr;
+   TH2F *tgem_mmg1_xcorr, *tgem_mmg1_max_xcorr, *tgem_mmg1_ycorr, *tgem_qgem_xcorr, *urw_qgem_xcorr, *urw_tgem_xcorr, *urw_mmg1_xcorr;
    TH2F *tgem_gt1_xcorr, *tgem_gt2_xcorr, *tgem_gt3_xcorr, *mmg1_gt1_xcorr, *mmg1_gt2_xcorr, *mmg1_gt3_xcorr, *qgem_gt1_xcorr, *qgem_gt2_xcorr, *qgem_gt3_xcorr;
    TH1F *hgemClusterDiff_el, *hmmg1ClusterDiff_el;
    TH1F *hgemPulseDiff_el, *hmmg1PulseDiff_el;
@@ -488,12 +488,12 @@ trdclass_ps25::trdclass_ps25(int RunNum_in, int MaxEvt_in=0,  int FirstEvt_in=0,
   FirstEvt=FirstEvt_in;
   FileNum=FileNum_in;
   
-  printf("========== trdclass_ps25 constructor Run=%d  ============\n",RunNum);
+  printf("========== trdclass_ps25 constructor Run=%d File=%d  ============\n",RunNum,FileNum);
   
   TChain* chain;
   TTree *tree=NULL;
   char chainFiles[128];
-  
+/*  
   if (FileNum<0.) {
     sprintf(chainFiles,"ROOT/Run_%06d_*.root",RunNum);
     chain = new TChain("events");
@@ -501,19 +501,31 @@ trdclass_ps25::trdclass_ps25(int RunNum_in, int MaxEvt_in=0,  int FirstEvt_in=0,
     chain->Add(chainFiles);
     tree=chain;
   }
-
+  */
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
      char FileName[128];
-     sprintf(FileName,"ROOT/Run_%06d_%03d.root",RunNum,FileNum);
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(FileName);
+     if (FileNum!=-1) {
+      sprintf(FileName,"ROOT/Run_%06d_%03d.root",RunNum,FileNum);
+     } else {
+      sprintf(FileName,"ROOT/Run_%06d.root",RunNum);
+     }
+     TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(FileName);
       if (!f || !f->IsOpen()) {
         f = new TFile(FileName);
         printf("---> Opening file = %s \n",FileName);
       } else {
+        //sprintf(FileName,"ROOT/Run_%06d.root",RunNum);
+        //f = (TFile*)gROOT->GetListOfFiles()->FindObject(FileName);
+        //printf("---> Open file = %s \n",FileName);
         printf("---> File %s cannot be opened !\n",FileName);
       }
+      /*
+      else {
+        printf("---> File %s cannot be opened !\n",FileName);
+      }
+      */
       f->GetObject("events",tree);
    }
    Init(tree);
