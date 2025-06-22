@@ -298,7 +298,7 @@ public :
   */ 
    TH2F *htgem_xy, *hmmg1_xy, *hqgem_xy;
    TH2F *tgem_mmg1_xcorr, *tgem_mmg1_max_xcorr, *tgem_mmg1_ycorr, *tgem_qgem_xcorr, *urw_qgem_xcorr, *urw_tgem_xcorr, *urw_mmg1_xcorr;
-   TH2F *tgem_gt1_xcorr, *tgem_gt2_xcorr, *tgem_gt3_xcorr, *mmg1_gt1_xcorr, *mmg1_gt2_xcorr, *mmg1_gt3_xcorr, *qgem_gt1_xcorr, *qgem_gt2_xcorr, *qgem_gt3_xcorr;
+   TH2F *tgem_gt1_xcorr, *tgem_gt2_xcorr, *tgem_gt3_xcorr, *mmg1_gt1_xcorr, *mmg1_gt2_xcorr, *mmg1_gt3_xcorr, *qgem_gt1_xcorr, *qgem_gt2_xcorr, *qgem_gt3_xcorr, *urw_gt1_xcorr, *urw_gt2_xcorr, *urw_gt3_xcorr;
    TH1F *hgemClusterDiff_el, *hmmg1ClusterDiff_el;
    TH1F *hgemPulseDiff_el, *hmmg1PulseDiff_el;
    TH1F *hClusterMaxdEdx_el, *hClusterTotaldEdx_el;
