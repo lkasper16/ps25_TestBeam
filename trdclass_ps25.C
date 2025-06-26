@@ -26,7 +26,8 @@
 #define DEBUG 0
 //
 double runSwitch=6080.; //Change setup from Quad-GEMTRD to MMG1-TRD
-double timeSwitchRun=6155; //RunNum where timing window was changed
+double timeSwitchRun1=6155; //RunNum where timing window was changed to 250
+double timeSwitchRun2=6210; //RunNum where timing window was changed back to 200
 double firstTimeWin=200.;
 double secondTimeWin=250.;
 
@@ -49,7 +50,7 @@ int Get3GEMChan(int ch, int slot, int runNum) {
   float dchan = cardChannel+cardNumber*24+(slot-3)*72.;
   if (runNum>0) {
     if ((slot==6 && ch>23) || slot==7 || slot==8 || (slot==9 && ch<48)) {
-      if ( (dchan-240.)==5. || (dchan-240.)==14. || (dchan-240.)==15. || (dchan-240.)==16. || (dchan-240.)==55.) { return -1; } else { return dchan-240.; }
+      if ( (dchan-240.)==5. || (dchan-240.)==14. || (dchan-240.)==15. || (dchan-240.)==16. || (dchan-240.)==55. || ((dchan-240.)==224.)) { return -1; } else { return dchan-240.; }
     }
   }
   return -1;
@@ -86,10 +87,10 @@ int GetRWELLXChan(int ch, int slot, int runNum) {
   if (slot>10) slot=(slot-2);
   int cardNumber = ch/24;
   int cardChannel = ch-cardNumber*24;
-  cardChannel = 24-cardChannel;
+  cardChannel = 24-cardChannel; //new style electronics have inverted polarity
   float dchan = cardChannel+cardNumber*24+(slot-3)*72.;
-    if (slot==10 || (slot==11 && ch<48)) { //if (slot==10 || (slot==13 && ch<48)) {
-      if ((dchan-504.)==35. || (dchan-504.)==45.) { return -1; } else { return dchan-504.; }
+    if (slot==10 || (slot==11 && ch<48)) {
+      if (/*(dchan-504.)==35. || (dchan-504.)==45. ||*/ (dchan-504.)==99) { return -1; } else { return dchan-504.; }
     }
   return -1;
 }
@@ -98,9 +99,9 @@ int GetRWELLYChan(int ch, int slot, int runNum) {
   if (slot>10) slot=(slot-2);
   int cardNumber = ch/24;
   int cardChannel = ch-cardNumber*24;
-  cardChannel = 24-cardChannel;
+  cardChannel = 24-cardChannel; //new style electronics have inverted polarity
   float dchan = cardChannel+cardNumber*24+(slot-3)*72.;
-    if ((slot==11 && ch>47)) { //if ((slot==13 && ch>47)) {
+    if ((slot==11 && ch>47)) {
       /*if ((dchan-480.)==42.) { return -1; } else {*/ return dchan-576.;//}
     }
   return -1;
@@ -167,14 +168,14 @@ void trdclass_ps25::Loop() {
   //----------------------------------------------------------------------------------
   
   //---- Set ADC Thresholds ----
-  float TGEM_THRESH=75.; //175
+  float TGEM_THRESH=100.; //175
   float QGEM_THRESH=75.;
-  float MMG1_THRESH=75.; //150
+  float MMG1_THRESH=100.; //150
   float URW_THRESH=100.;
   
   //RunNum-based timing window change
   double histTime = -1;
-  if (RunNum<=timeSwitchRun) { histTime = firstTimeWin; } else { histTime = secondTimeWin; }
+  if (RunNum<=timeSwitchRun1 || RunNum>=timeSwitchRun2) { histTime = firstTimeWin; } else { histTime = secondTimeWin; }
   
   hcount = new TH1D("hcount","Count",3,0,3);  HistList->Add(hcount);
   hcount->SetStats(0);   hcount->SetFillColor(38);   hcount->SetMinimum(1.);
@@ -301,29 +302,29 @@ void trdclass_ps25::Loop() {
   htgem_xy = new TH2F("htgem_xy","Triple GEM-TRD X-Y Hit Display; X (fADC) [mm]; Y (SRS) [mm] ",128,-0.2,102.2,128,-0.2,102.2); htgem_xy->SetStats(0);  HistList->Add(htgem_xy);
   hqgem_xy = new TH2F("hqgem_xy","Quad GEM-TRD X-Y Hit Display; X (fADC) [mm]; Y (SRS) [mm] ",128,-0.2,102.2,128,-0.2,102.2); hqgem_xy->SetStats(0);  HistList->Add(hqgem_xy);
   hmmg1_xy = new TH2F("hmmg1_xy","MMG1-TRD X-Y Hit Display; X (fADC) [mm]; Y (SRS) [mm] ",128,-0.2,102.2,128,-0.2,102.2); hmmg1_xy->SetStats(0);  HistList->Add(hmmg1_xy);
-  hurw_xy = new TH2F("hurw_xy","uRWELL-TRD X-Y Hit Display; X (fADC) [mm]; Y (fADC) [mm] ",120,-0.4,102.,120,-0.4,102.); hurw_xy->SetStats(0);  HistList->Add(hurw_xy);
-  hurw_max_xy = new TH2F("hurw_max_xy","uRWELL-TRD X-Y Max Hit Display; X (fADC) [mm]; Y (fADC) [mm] ",120,-0.4,102.,120,-0.4,102.); hurw_max_xy->SetStats(0);  HistList->Add(hurw_max_xy);
+  hurw_xy = new TH2F("hurw_xy","uRWELL-TRD X-Y Hit Display; X (fADC) [mm]; Y (fADC) [mm] ",128,-0.2,102.2,128,-0.2,102.2); hurw_xy->SetStats(0);  HistList->Add(hurw_xy);
+  hurw_max_xy = new TH2F("hurw_max_xy","uRWELL-TRD X-Y Max Hit Display; X (fADC) [mm]; Y (fADC) [mm] ",128,-0.2,102.2,128,-0.2,102.2); hurw_max_xy->SetStats(0);  HistList->Add(hurw_max_xy);
 
   //-- X,Y Correlations --
-  tgem_mmg1_xcorr = new TH2F("tgem_mmg1_xcorr","Triple GEM-TRD X Correlation With MMG1-TRD; Triple GEM-TRD X [mm]; MMG1-TRD X [mm] ",128,-0.4,102.,128,-0.4,102.); HistList->Add(tgem_mmg1_xcorr);
-  tgem_qgem_xcorr = new TH2F("tgem_qgem_xcorr","Triple GEM-TRD X Correlation With Quad GEM-TRD; Triple GEM-TRD X [mm]; Quad GEM-TRD X [mm] ",128,-0.4,102.,128,-0.4,102.); HistList->Add(tgem_qgem_xcorr);
-  urw_tgem_xcorr = new TH2F("urw_tgem_xcorr","Triple GEM-TRD X Correlation With uRWELL-TRD; uRWELL-TRD X [mm]; Triple GEM-TRD X [mm]",128,-0.2,102.2,128,-0.4,102.); urw_tgem_xcorr->SetStats(0); HistList->Add(urw_tgem_xcorr);
-  urw_qgem_xcorr = new TH2F("urw_qgem_xcorr","Quad GEM-TRD X Correlation With uRWELL-TRD; uRWELL-TRD X [mm]; Quad GEM-TRD X [mm]",128,-0.2,102.2,128,-0.4,102.); urw_tgem_xcorr->SetStats(0); HistList->Add(urw_qgem_xcorr);
-  urw_mmg1_xcorr = new TH2F("urw_mmg1_xcorr","MMG1-TRD X Correlation With uRWELL-TRD; uRWELL-TRD X [mm];  MMG1-TRD X [mm]",128,-0.2,102.2,128,-0.4,102.); urw_tgem_xcorr->SetStats(0); HistList->Add(urw_mmg1_xcorr);
+  tgem_mmg1_xcorr = new TH2F("tgem_mmg1_xcorr","Triple GEM-TRD X Correlation With MMG1-TRD; Triple GEM-TRD X [mm]; MMG1-TRD X [mm] ",128,-0.2,102.2,128,-0.2,102.2); HistList->Add(tgem_mmg1_xcorr);
+  tgem_qgem_xcorr = new TH2F("tgem_qgem_xcorr","Triple GEM-TRD X Correlation With Quad GEM-TRD; Triple GEM-TRD X [mm]; Quad GEM-TRD X [mm] ",128,-0.2,102.2,128,-0.2,102.2); HistList->Add(tgem_qgem_xcorr);
+  urw_tgem_xcorr = new TH2F("urw_tgem_xcorr","Triple GEM-TRD X Correlation With uRWELL-TRD; uRWELL-TRD X [mm]; Triple GEM-TRD X [mm]",128,-0.2,102.2,128,-0.2,102.2); urw_tgem_xcorr->SetStats(0); HistList->Add(urw_tgem_xcorr);
+  urw_qgem_xcorr = new TH2F("urw_qgem_xcorr","Quad GEM-TRD X Correlation With uRWELL-TRD; uRWELL-TRD X [mm]; Quad GEM-TRD X [mm]",128,-0.2,102.2,128,-0.2,102.2); urw_qgem_xcorr->SetStats(0); HistList->Add(urw_qgem_xcorr);
+  urw_mmg1_xcorr = new TH2F("urw_mmg1_xcorr","MMG1-TRD X Correlation With uRWELL-TRD; uRWELL-TRD X [mm];  MMG1-TRD X [mm]",128,-0.2,102.2,128,-0.2,102.2); urw_mmg1_xcorr->SetStats(0); HistList->Add(urw_mmg1_xcorr);
   tgem_mmg1_ycorr = new TH2F("tgem_mmg1_ycorr","Triple GEM-TRD Y Correlation With MMG1-TRD; Triple GEM-TRD Y [mm]; MMG1-TRD Y [mm] ",128,-0.2,102.2,128,-0.2,102.2); HistList->Add(tgem_mmg1_ycorr);
-  tgem_mmg1_max_xcorr = new TH2F("tgem_mmg1_max_xcorr","Triple GEM-TRD Max X Correlation With MMG1-TRD; Triple GEM-TRD X [mm]; MMG1-TRD X [mm] ",128,-0.4,102.,128,-0.4,102.); HistList->Add(tgem_mmg1_max_xcorr);
-  tgem_gt1_xcorr = new TH2F("tgem_gt1_xcorr","Triple GEM-TRD X Correlation With GEMTRKR-1; Triple GEM-TRD X [mm]; GEMTRKR-1 X [mm] ",128,-0.4,102.,128,-0.2,102.2); HistList->Add(tgem_gt1_xcorr);
-  tgem_gt2_xcorr = new TH2F("tgem_gt2_xcorr","Triple GEM-TRD X Correlation With GEMTRKR-2; Triple GEM-TRD X [mm]; GEMTRKR-2 X [mm] ",128,-0.4,102.,128,-0.2,102.2); HistList->Add(tgem_gt2_xcorr);
-  tgem_gt3_xcorr = new TH2F("tgem_gt3_xcorr","Triple GEM-TRD X Correlation With GEMTRKR-3; Triple GEM-TRD X [mm]; GEMTRKR-3 X [mm] ",128,-0.4,102.,128,-0.2,102.2); HistList->Add(tgem_gt3_xcorr);
-  mmg1_gt1_xcorr = new TH2F("mmg1_gt1_xcorr","MMG1-TRD X Correlation With GEMTRKR-1; MMG1-TRD X [mm]; GEMTRKR-1 X [mm] ",128,-0.4,102.,128,-0.2,102.2); HistList->Add(mmg1_gt1_xcorr);
-  mmg1_gt2_xcorr = new TH2F("mmg1_gt2_xcorr","MMG1-TRD X Correlation With GEMTRKR-2; MMG1-TRD X [mm]; GEMTRKR-2 X [mm] ",128,-0.4,102.,128,-0.2,102.2); HistList->Add(mmg1_gt2_xcorr);
-  mmg1_gt3_xcorr = new TH2F("mmg1_gt3_xcorr","MMG1-TRD X Correlation With GEMTRKR-3; MMG1-TRD X [mm]; GEMTRKR-3 X [mm] ",128,-0.4,102.,128,-0.2,102.2); HistList->Add(mmg1_gt3_xcorr);
-  qgem_gt1_xcorr = new TH2F("qgem_gt1_xcorr","Quad GEM-TRD X Correlation With GEMTRKR-1; Quad GEM-TRD X [mm]; GEMTRKR-1 X [mm] ",128,-0.4,102.,128,-0.2,102.2); HistList->Add(qgem_gt1_xcorr);
-  qgem_gt2_xcorr = new TH2F("qgem_gt2_xcorr","Quad GEM-TRD X Correlation With GEMTRKR-2; Quad GEM-TRD X [mm]; GEMTRKR-2 X [mm] ",128,-0.4,102.,128,-0.2,102.2); HistList->Add(qgem_gt2_xcorr);
-  qgem_gt3_xcorr = new TH2F("qgem_gt3_xcorr","Quad GEM-TRD X Correlation With GEMTRKR-3; Quad GEM-TRD X [mm]; GEMTRKR-3 X [mm] ",128,-0.4,102.,128,-0.2,102.2); HistList->Add(qgem_gt3_xcorr);
-  urw_gt1_xcorr = new TH2F("urw_gt1_xcorr","uRWell-TRD X Correlation With GEMTRKR-1; uRWell-TRD X [mm]; GEMTRKR-1 X [mm] ",128,-0.2,102.2,128,-0.2,102.2); HistList->Add(urw_gt1_xcorr);
-  urw_gt2_xcorr = new TH2F("urw_gt2_xcorr","uRWell-TRD X Correlation With GEMTRKR-2; uRWell-TRD X [mm]; GEMTRKR-2 X [mm] ",128,-0.2,102.2,128,-0.2,102.2); HistList->Add(urw_gt2_xcorr);
-  urw_gt3_xcorr = new TH2F("urw_gt3_xcorr","uRWell-TRD X Correlation With GEMTRKR-3; uRWell-TRD X [mm]; GEMTRKR-3 X [mm] ",128,-0.2,102.2,128,-0.2,102.2); HistList->Add(urw_gt3_xcorr);
+  tgem_mmg1_max_xcorr = new TH2F("tgem_mmg1_max_xcorr","Triple GEM-TRD Max X Correlation With MMG1-TRD; Triple GEM-TRD X [mm]; MMG1-TRD X [mm] ",128,-0.2,102.2,128,-0.2,102.2); HistList->Add(tgem_mmg1_max_xcorr);
+  tgem_gt1_xcorr = new TH2F("tgem_gt1_xcorr","Triple GEM-TRD X Correlation With GEMTRKR-1; Triple GEM-TRD X [mm]; GEMTRKR-1 X [mm] ",128,-0.2,102.2,128,-0.4,102.); HistList->Add(tgem_gt1_xcorr);
+  tgem_gt2_xcorr = new TH2F("tgem_gt2_xcorr","Triple GEM-TRD X Correlation With GEMTRKR-2; Triple GEM-TRD X [mm]; GEMTRKR-2 X [mm] ",128,-0.2,102.2,128,-0.4,102.); HistList->Add(tgem_gt2_xcorr);
+  tgem_gt3_xcorr = new TH2F("tgem_gt3_xcorr","Triple GEM-TRD X Correlation With GEMTRKR-3; Triple GEM-TRD X [mm]; GEMTRKR-3 X [mm] ",128,-0.2,102.2,128,-0.4,102.); HistList->Add(tgem_gt3_xcorr);
+  mmg1_gt1_xcorr = new TH2F("mmg1_gt1_xcorr","MMG1-TRD X Correlation With GEMTRKR-1; MMG1-TRD X [mm]; GEMTRKR-1 X [mm] ",128,-0.2,102.2,128,-0.4,102.); HistList->Add(mmg1_gt1_xcorr);
+  mmg1_gt2_xcorr = new TH2F("mmg1_gt2_xcorr","MMG1-TRD X Correlation With GEMTRKR-2; MMG1-TRD X [mm]; GEMTRKR-2 X [mm] ",128,-0.2,102.2,128,-0.4,102.); HistList->Add(mmg1_gt2_xcorr);
+  mmg1_gt3_xcorr = new TH2F("mmg1_gt3_xcorr","MMG1-TRD X Correlation With GEMTRKR-3; MMG1-TRD X [mm]; GEMTRKR-3 X [mm] ",128,-0.2,102.2,128,-0.4,102.); HistList->Add(mmg1_gt3_xcorr);
+  qgem_gt1_xcorr = new TH2F("qgem_gt1_xcorr","Quad GEM-TRD X Correlation With GEMTRKR-1; Quad GEM-TRD X [mm]; GEMTRKR-1 X [mm] ",128,-0.4,102.,128,-0.4,102.); HistList->Add(qgem_gt1_xcorr);
+  qgem_gt2_xcorr = new TH2F("qgem_gt2_xcorr","Quad GEM-TRD X Correlation With GEMTRKR-2; Quad GEM-TRD X [mm]; GEMTRKR-2 X [mm] ",128,-0.4,102.,128,-0.4,102.); HistList->Add(qgem_gt2_xcorr);
+  qgem_gt3_xcorr = new TH2F("qgem_gt3_xcorr","Quad GEM-TRD X Correlation With GEMTRKR-3; Quad GEM-TRD X [mm]; GEMTRKR-3 X [mm] ",128,-0.4,102.,128,-0.4,102.); HistList->Add(qgem_gt3_xcorr);
+  urw_gt1_xcorr = new TH2F("urw_gt1_xcorr","uRWell-TRD X Correlation With GEMTRKR-1; uRWell-TRD X [mm]; GEMTRKR-1 X [mm] ",128,-0.2,102.2,128,-0.4,102.); HistList->Add(urw_gt1_xcorr);
+  urw_gt2_xcorr = new TH2F("urw_gt2_xcorr","uRWell-TRD X Correlation With GEMTRKR-2; uRWell-TRD X [mm]; GEMTRKR-2 X [mm] ",128,-0.2,102.2,128,-0.4,102.); HistList->Add(urw_gt2_xcorr);
+  urw_gt3_xcorr = new TH2F("urw_gt3_xcorr","uRWell-TRD X Correlation With GEMTRKR-3; uRWell-TRD X [mm]; GEMTRKR-3 X [mm] ",128,-0.2,102.2,128,-0.4,102.); HistList->Add(urw_gt3_xcorr);
   
   //hgemClusterDiff_el = new TH1F("hgemClusterDiff_el","GEM Cluster Distance from MMG1 Track; Distance [mm]",160,-20.,20.); HistList->Add(hgemClusterDiff_el);
   //hmmg1ClusterDiff_el = new TH1F("hmmg1ClusterDiff_el","MMG1 Cluster Distance from GEM Track; Distance [mm]",160,-20.,20.); HistList->Add(hmmg1ClusterDiff_el);
