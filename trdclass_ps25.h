@@ -317,7 +317,7 @@ public :
    TH1F *qgem_f125_el, *qgem_f125_el_max;
    TH2F *qgem_f125_el_amp2d, *qgem_f125_el_amp2ds, *qgem_f125_el_raw;
    TH2F *f125_fit, *f125_el_amp2ds;
-   
+   TH2F *f125_el_amp2d_max, *mmg1_f125_el_amp2d_max, *urw_f125_x_amp2d_max, *urw_f125_y_amp2d_max;
    TH1F *mmg1_f125_el, *mmg1_f125_el_max;
    TH1F *urw_f125_el_x, *urw_f125_el_y, *urw_f125_el_xmax, *urw_f125_el_ymax; 
    TH2F *mmg1_f125_el_amp2d, *mmg1_f125_el_amp2ds;

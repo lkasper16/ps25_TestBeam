@@ -282,14 +282,18 @@ void trdclass_ps25::Loop() {
   
   //-- Amplitude Histos --
   f125_el_amp2d = new TH2F("f125_el_amp2d","Triple GEM-TRD ADC Amp in Time; Time Response (8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); f125_el_amp2d->SetStats(0); HistList->Add(f125_el_amp2d);
+  f125_el_amp2d_max = new TH2F("f125_el_amp2d_max","Triple GEM-TRD Max ADC Amp in Time; Time Response (8ns) ; X [mm] ",(int)histTime,0.5,histTime+.5,128,-0.2,102.2); f125_el_amp2d_max->SetStats(0); HistList->Add(f125_el_amp2d_max);
   f125_xVSamp = new TH2F("f125_xVSamp","Triple GEM-TRD X Channel vs ADC Amp; X Channel; ADC Value",240,-0.5,239.5,100,0.,4096.); f125_xVSamp->SetStats(0); HistList->Add(f125_xVSamp);
   qgem_f125_el_amp2d = new TH2F("qgem_f125_el_amp2d","Quad GEM-TRD ADC Amp in Time; Time Response (8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); qgem_f125_el_amp2d->SetStats(0); HistList->Add(qgem_f125_el_amp2d);
   qgem_f125_xVSamp = new TH2F("qgem_f125_xVSamp","Quad GEM-TRD X Channel vs ADC Amp; X Channel; ADC Value",240,-0.5,239.5,100,0.,4096.); qgem_f125_xVSamp->SetStats(0); HistList->Add(qgem_f125_xVSamp);
   urw_f125_x_amp2d = new TH2F("urw_f125_x_amp2d","uRWELL-TRD X ADC Amp in Time; Time Response (8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,120,-0.5,119.5); urw_f125_x_amp2d->SetStats(0); HistList->Add(urw_f125_x_amp2d);
+  urw_f125_x_amp2d_max = new TH2F("urw_f125_x_amp2d_max","uRWELL-TRD X Max ADC Amp in Time; Time Response (8ns) ; X [mm] ",(int)histTime,0.5,histTime+.5,128,-0.2,102.2); urw_f125_x_amp2d_max->SetStats(0); HistList->Add(urw_f125_x_amp2d_max);
   urw_f125_xVSamp = new TH2F("urw_f125_xVSamp","uRWELL-TRD X Channel vs ADC Amp; X Channel; ADC Value",120,-0.5,119.5,100,0.,4096.); urw_f125_xVSamp->SetStats(0); HistList->Add(urw_f125_xVSamp);
   mmg1_f125_el_amp2d = new TH2F("mmg1_f125_el_amp2d","MMG1-TRD ADC Amp in Time; Time Response (8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); mmg1_f125_el_amp2d->SetStats(0); HistList->Add(mmg1_f125_el_amp2d);
+  mmg1_f125_el_amp2d_max = new TH2F("mmg1_f125_el_amp2d_max","MMG1-TRD Max ADC Amp in Time; Time Response (8ns) ; X [mm] ",(int)histTime,0.5,histTime+.5,128,-0.2,102.2); mmg1_f125_el_amp2d_max->SetStats(0); HistList->Add(mmg1_f125_el_amp2d_max);
   mmg1_f125_xVSamp = new TH2F("mmg1_f125_xVSamp","MMG1-TRD X Channel vs ADC Amp; X Channel; ADC Value",240,-0.5,239.5,100,0.,4096.); mmg1_f125_xVSamp->SetStats(0); HistList->Add(mmg1_f125_xVSamp);
   urw_f125_y_amp2d = new TH2F("urw_f125_y_amp2d","uRWELL-TRD Y ADC Amp in Time; Time Response (8ns) ; Y Channel ",(int)histTime,0.5,histTime+.5,120,-0.5,119.5); urw_f125_y_amp2d->SetStats(0); HistList->Add(urw_f125_y_amp2d);
+  urw_f125_y_amp2d_max = new TH2F("urw_f125_y_amp2d_max","uRWELL-TRD Y Max ADC Amp in Time; Time Response (8ns) ; Y [mm] ",(int)histTime,0.5,histTime+.5,128,-0.2,102.2); urw_f125_y_amp2d_max->SetStats(0); HistList->Add(urw_f125_y_amp2d_max);
   urw_f125_yVSamp = new TH2F("urw_f125_yVSamp","uRWELL-TRD Y Channel vs ADC Amp; Y Channel; ADC Value",120,-0.5,119.5,100,0.,4096.); urw_f125_yVSamp->SetStats(0); HistList->Add(urw_f125_yVSamp);
   
   f125_el_amp2ds = new TH2F("f125_el_amp2ds","Triple GEM-TRD ADC Amp in Time; Time Response (8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); f125_el_amp2ds->SetStats(0); HistList->Add(f125_el_amp2ds);
@@ -480,6 +484,10 @@ void trdclass_ps25::Loop() {
       printf("------- evt=%llu  f125_raw_count=%llu f125_pulse_count=%llu f250_wraw_count=%llu, srs_peak_count=%llu \n",jentry,f125_wraw_count, f125_pulse_count, f250_wraw_count, gem_peak_count);
     event_num=jentry;
     //if (jentry==183958) continue; //ERROR IN PULSE DATA - RUN 4478
+    
+    bool USE_MAX_TRD_HITS = false;
+    bool USE_MAX_TRACKER_HITS = false;
+    bool USE_TRD_XCORR = false;
     
     tgem_nhit=0;
     qgem_nhit=0;
@@ -1030,12 +1038,24 @@ void trdclass_ps25::Loop() {
       //double urw_el_Xchan_max=urw_xchanmax;
       //double urw_el_Ychan_max=urw_ychanmax;
       
+      if (tgem_ampmax > TGEM_THRESH) f125_el_amp2d_max->Fill(tgem_timemax,tgem_xchanmax,tgem_ampmax);
+      if (mmg1_ampmax > MMG1_THRESH) mmg1_f125_el_amp2d_max->Fill(mmg1_timemax,mmg1_xchanmax,mmg1_ampmax);
+      if (urw_xampmax > URW_THRESH) urw_f125_x_amp2d_max->Fill(urw_xtimemax,urw_xchanmax,urw_xampmax);
+      if (urw_yampmax > URW_THRESH) urw_f125_y_amp2d_max->Fill(urw_ytimemax,urw_ychanmax,urw_yampmax);
+      
       //==============================================
       //        Second fa125 pulse loop
       //==============================================
       
-      //if (tgem_ampmax>0. && (mmg1_ampmax>0. || qgem_ampmax>0.) && (urw_xampmax>0. || urw_yampmax>0.)) {
-      if (tgem_ampmax>0. && (mmg1_ampmax>0. || qgem_ampmax>0.)) {
+      if (tgem_ampmax>TGEM_THRESH && (mmg1_ampmax>MMG1_THRESH || qgem_ampmax>QGEM_THRESH) && (urw_xampmax>URW_THRESH || urw_yampmax>URW_THRESH)) USE_MAX_TRD_HITS = true;
+      if (((gemtrkr1_xamp_max>0. && gemtrkr1_yamp_max>0.) && (gemtrkr2_xamp_max>0. && gemtrkr2_yamp_max>0.)) || ((gemtrkr1_xamp_max>0. && gemtrkr1_yamp_max>0.) && (gemtrkr3_xamp_max>0. && gemtrkr3_yamp_max>0.)) || ((gemtrkr2_xamp_max>0. && gemtrkr2_yamp_max>0.) && (gemtrkr3_xamp_max>0. && gemtrkr3_yamp_max>0.))) USE_MAX_TRACKER_HITS = true;
+      /////////if () USE_TRD_XCORR = true;
+      
+      //-- SET EXTERNAL TRACKING REQUIREMENT --
+      if (USE_MAX_TRD_HITS) {
+      //if (USE_MAX_TRACKER_HITS) {
+      //if (USE_TRD_XCORR) {
+
       for (ULong64_t i=0; i<f125_pulse_count; i++) {
         
       	float peak_amp = f125_pulse_peak_amp->at(i);
@@ -1188,14 +1208,14 @@ void trdclass_ps25::Loop() {
         urw_zHist_vect.push_back(urw_zHist->GetBinContent(i));
       }
       
-      if (tgem_nhit>0.) htgem_nhits->Fill(tgem_nhit);
-      if (qgem_nhit>0.) hqgem_nhits->Fill(qgem_nhit);
-      if (mmg1_nhit>0.) hmmg1_nhits->Fill(mmg1_nhit);
-      if (urw_nxhit>0.) hurw_nxhits->Fill(urw_nxhit);
-      if (urw_nyhit>0.) hurw_nyhits->Fill(urw_nyhit);
-      if (gt1_nhit>0.) hgt1_nhits->Fill(gt1_nhit);
-      if (gt2_nhit>0.) hgt2_nhits->Fill(gt2_nhit);
-      if (gt3_nhit>0.) hgt3_nhits->Fill(gt3_nhit);
+      if (tgem_nhit>-1.) htgem_nhits->Fill(tgem_nhit);
+      if (qgem_nhit>-1.) hqgem_nhits->Fill(qgem_nhit);
+      if (mmg1_nhit>-1.) hmmg1_nhits->Fill(mmg1_nhit);
+      if (urw_nxhit>-1.) hurw_nxhits->Fill(urw_nxhit);
+      if (urw_nyhit>-1.) hurw_nyhits->Fill(urw_nyhit);
+      if (gt1_nhit>-1.) hgt1_nhits->Fill(gt1_nhit);
+      if (gt2_nhit>-1.) hgt2_nhits->Fill(gt2_nhit);
+      if (gt3_nhit>-1.) hgt3_nhits->Fill(gt3_nhit);
       
       for (ULong64_t i=0; i<gt_1_idx_x; i++) {
         if (gemtrkr_1_peak_pos_x[i]>1. && tgem_xchanmax>-1.) tgem_gt1_xcorr->Fill(tgem_xchanmax, gemtrkr_1_peak_pos_x[i]);
@@ -2214,6 +2234,11 @@ void trdclass_ps25::Loop() {
     cc=NextPlot(nxd,nyd);   urw_f125_xVSamp->Draw("colz");
     cc=NextPlot(nxd,nyd);   urw_f125_yVSamp->Draw("colz");
     
+    htitle("  fa125 Max Amp 2D");    if (!COMPACT) cc=NextPlot(0,0);
+    cc=NextPlot(nxd,nyd);   f125_el_amp2d_max->Draw("colz");
+    cc=NextPlot(nxd,nyd);   mmg1_f125_el_amp2d_max->Draw("colz");
+    cc=NextPlot(nxd,nyd);   urw_f125_x_amp2d_max->Draw("colz");
+    cc=NextPlot(nxd,nyd);   urw_f125_y_amp2d_max->Draw("colz");
     
     htitle("  External Tracking");    if (!COMPACT) cc=NextPlot(0,0);
     cc=NextPlot(nxd,nyd);   tgem_residuals->Draw();
