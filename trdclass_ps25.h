@@ -296,11 +296,13 @@ public :
    TH1F *hCal_sum_pi, *hPresh_sum_pi, *hMult_sum_pi, *hCher_sum_pi;
    TH2F *hCal_Presh, *hCal_Cher;
   */ 
-   TH2F *htgem_xy, *hmmg1_xy, *hqgem_xy;
-   TH2F *tgem_mmg1_xcorr, *tgem_mmg1_max_xcorr, *tgem_mmg1_ycorr, *tgem_qgem_xcorr, *urw_qgem_xcorr, *urw_tgem_xcorr, *urw_mmg1_xcorr;
+   TH2F *htgem_xy, *hmmg1_xy, *hqgem_xy, *htgem_max_xy, *hmmg1_max_xy;
+   TH2F *tgem_mmg1_xcorr, *tgem_mmg1_ycorr, *tgem_qgem_xcorr, *urw_qgem_xcorr, *urw_tgem_xcorr, *urw_mmg1_xcorr;
    TH2F *tgem_gt1_xcorr, *tgem_gt2_xcorr, *tgem_gt3_xcorr, *mmg1_gt1_xcorr, *mmg1_gt2_xcorr, *mmg1_gt3_xcorr, *qgem_gt1_xcorr, *qgem_gt2_xcorr, *qgem_gt3_xcorr, *urw_gt1_xcorr, *urw_gt2_xcorr, *urw_gt3_xcorr;
+   TH2F *tgem_mmg1_max_xcorr, *tgem_urw_max_xcorr, *urw_mmg1_max_xcorr;
    TH1F *hgemClusterDiff_el, *hmmg1ClusterDiff_el;
-   TH1F *hgemPulseDiff_el, *hmmg1PulseDiff_el;
+   TH1F *hgemPulseDiff_el, *hmmg1PulseDiff_el, *hurwPulseDiff_el, *hurwPulseDiff_mmg;
+   TH1F *hTrackDiff;
    TH1F *hClusterMaxdEdx_el, *hClusterTotaldEdx_el;
    TH1F *hmmg1ClusterMaxdEdx_el, *hmmg1ClusterTotaldEdx_el;
    
@@ -312,18 +314,19 @@ public :
    TH2F *hgemtrkr_1_tgem, *hgemtrkr_1_mmg1, *hgemtrkr_1_qgem;
    TH1F *hgemtrkr_1_max_xch, *hgemtrkr_1_max_xamp, *hgemtrkr_2_max_xch, *hgemtrkr_2_max_xamp, *hgemtrkr_3_max_xch, *hgemtrkr_3_max_xamp;
    
-   TH1F *f125_el, *f125_el_max;
+   TH1F *f125_el, *f125_el_max, *f125_el_max_late;
    TH2F *f125_el_amp2d, *f125_el_raw;
    TH1F *qgem_f125_el, *qgem_f125_el_max;
    TH2F *qgem_f125_el_amp2d, *qgem_f125_el_amp2ds, *qgem_f125_el_raw;
    TH2F *f125_fit, *f125_el_amp2ds;
    TH2F *f125_el_amp2d_max, *mmg1_f125_el_amp2d_max, *urw_f125_x_amp2d_max, *urw_f125_y_amp2d_max;
-   TH1F *mmg1_f125_el, *mmg1_f125_el_max;
-   TH1F *urw_f125_el_x, *urw_f125_el_y, *urw_f125_el_xmax, *urw_f125_el_ymax; 
+   TH1F *mmg1_f125_el, *mmg1_f125_el_max, *mmg1_f125_el_max_late;
+   TH1F *urw_f125_el_x, *urw_f125_el_y, *urw_f125_el_xmax, *urw_f125_el_ymax, *urw_f125_el_xmax_late; 
    TH2F *mmg1_f125_el_amp2d, *mmg1_f125_el_amp2ds;
    TH2F *urw_f125_x_amp2d, *urw_f125_x_amp2ds, *urw_f125_y_amp2d, *urw_f125_y_amp2ds, *hurw_xy, *hurw_max_xy;
    TH2F *mmg1_f125_fit, *urw_f125_fit, *qgem_f125_fit;
    TH2F *f125_xVSamp, *qgem_f125_xVSamp, *mmg1_f125_xVSamp, *urw_f125_xVSamp, *urw_f125_yVSamp;
+   TH2F *f125_timeVSamp, *f125_timeVSamp_max, *mmg1_f125_timeVSamp, *mmg1_f125_timeVSamp_max, *urw_f125_x_timeVSamp, *urw_f125_x_timeVSamp_max;
    
    //TH2F *gem_el_eff, *gem_pi_eff, *mmg1_el_eff, *mmg1_pi_eff;
    TH2F *tgem_mmg1_doubleX, *tgem_mmg1_doubleY, *tgem_qgem_doubleY;
