@@ -25,9 +25,10 @@
 //#define WRITE_CSV
 #define DEBUG 0
 //
-double runSwitch=6080.; //Change setup from Quad-GEMTRD to MMG1-TRD
-double timeSwitchRun1=6155; //RunNum where timing window was changed to 250
-double timeSwitchRun2=6210; //RunNum where timing window was changed back to 200
+int runSwitch=6080; //Change setup from Quad-GEMTRD to MMG1-TRD
+int timeSwitchRun1=6155; //RunNum where timing window was changed to 250
+int timeSwitchRun2=6210; //RunNum where timing window was changed back to 200
+int runAluminum=6357; //Beginning of runs with al cathodes
 double firstTimeWin=200.;
 double secondTimeWin=250.;
 
@@ -49,7 +50,7 @@ int Get3GEMChan(int ch, int slot, int runNum) {
   int cardChannel = ch-cardNumber*24;
   float dchan = cardChannel+cardNumber*24+(slot-3)*72.;
   if ((slot==6 && ch>23) || slot==7 || slot==8 || (slot==9 && ch<48)) {
-    if ( (dchan-240.)==16. || (dchan-240.)==24. || (dchan-240.)==51. || (dchan-240.)==52. || (dchan-240.)==55. || (dchan-240.)==179. || (dchan-240.)==193. || (dchan-240.)==212. || ((dchan-240.)==224.)) { return -1; } else { return dchan-240.; }
+    if ( (runNum<runAluminum && ((dchan-240.)==16. || (dchan-240.)==24. || (dchan-240.)==51. || (dchan-240.)==52. || (dchan-240.)==55. || (dchan-240.)==179. || (dchan-240.)==193. || (dchan-240.)==212. || (dchan-240.)==224.)) || (runNum>=runAluminum && ((dchan-240.)==0. || (dchan-240.)==16. || (dchan-240.)==2. || (dchan-240.)==24. || (dchan-240.)==51. || (dchan-240.)==52. || (dchan-240.)==55. || (dchan-240.)==56. || (dchan-240.)==179. || (dchan-240.)==193. || (dchan-240.)==126. || (dchan-240.)==212. || (dchan-240.)==224.))) { return -1; } else { return dchan-240.; }
   }
   return -1;
 }
@@ -74,7 +75,7 @@ int GetMMG1Chan(int ch, int slot, int runNum) {
   float dchan = cardChannel+cardNumber*24+(slot-3)*72.;
   if (runNum>runSwitch) {
     if (slot==3 || slot==4 || slot==5 || (slot==6 && ch<24)) {
-      if (dchan==16. || dchan==45. || dchan==71. || dchan==136. || dchan==215. || dchan==224. || dchan==226.) { return -1; } else { return dchan; }
+      if ((runNum<runAluminum && (dchan==16. || dchan==45. || dchan==71. || dchan==136. || dchan==215. || dchan==224. || dchan==226.)) || (runNum>=runAluminum && (dchan==16. || dchan==45. || dchan==71. || dchan==136. || dchan==215. || dchan==224. || dchan==226.))) { return -1; } else { return dchan; }
     }
   }
   return -1;
@@ -88,7 +89,7 @@ int GetRWELLXChan(int ch, int slot, int runNum) {
   cardChannel = 24-cardChannel; //new style electronics have inverted polarity
   float dchan = cardChannel+cardNumber*24+(slot-3)*72.;
     if (slot==10 || (slot==11 && ch<48)) {
-      if ((dchan-504.)==99) { return -1; } else { return dchan-504.; }
+      if ((runNum<runAluminum && (dchan-504.)==99.) || (runNum>runAluminum && (dchan-504.)==102.)) { return -1; } else { return dchan-504.; }
     }
   return -1;
 }
@@ -295,19 +296,19 @@ void trdclass_ps25::Loop() {
   
   
   //-- Amplitude Histos --
-  f125_el_amp2d = new TH2F("f125_el_amp2d","Triple GEM-TRD ADC Amp in Time; Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); f125_el_amp2d->SetStats(0); HistList->Add(f125_el_amp2d);
+  f125_el_amp2d = new TH2F("f125_el_amp2d","Triple GEM-TRD ADC Amp in Time (After Selections); Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); f125_el_amp2d->SetStats(0); HistList->Add(f125_el_amp2d);
   f125_el_amp2d_max = new TH2F("f125_el_amp2d_max","Triple GEM-TRD Max ADC Amp in Time; Time Response (*8ns) ; X [mm] ",(int)histTime,0.5,histTime+.5,128,-0.2,102.2); f125_el_amp2d_max->SetStats(0); HistList->Add(f125_el_amp2d_max);
   f125_xVSamp = new TH2F("f125_xVSamp","Triple GEM-TRD X Channel vs ADC Amp; X Channel; ADC Value",240,-0.5,239.5,410,0.,4100.); f125_xVSamp->SetStats(0); HistList->Add(f125_xVSamp);
   f125_timeVSamp = new TH2F("f125_timeVSamp","Triple GEM-TRD X ADC Amp in Time; Time Response (*8ns); ADC Value",(int)histTime,0.5,histTime+.5,410,0.,4100.); f125_timeVSamp->SetStats(0); HistList->Add(f125_timeVSamp);
   f125_timeVSamp_max = new TH2F("f125_timeVSamp_max","Triple GEM-TRD X Max ADC Amp in Time; Time Response (*8ns); ADC Value",(int)histTime,0.5,histTime+.5,410,0.,4100.); f125_timeVSamp_max->SetStats(0); HistList->Add(f125_timeVSamp_max);
-  qgem_f125_el_amp2d = new TH2F("qgem_f125_el_amp2d","Quad GEM-TRD ADC Amp in Time; Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); qgem_f125_el_amp2d->SetStats(0); HistList->Add(qgem_f125_el_amp2d);
+  qgem_f125_el_amp2d = new TH2F("qgem_f125_el_amp2d","Quad GEM-TRD ADC Amp in Time (After Selections); Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); qgem_f125_el_amp2d->SetStats(0); HistList->Add(qgem_f125_el_amp2d);
   qgem_f125_xVSamp = new TH2F("qgem_f125_xVSamp","Quad GEM-TRD X Channel vs ADC Amp; X Channel; ADC Value",240,-0.5,239.5,410,0.,4100.); qgem_f125_xVSamp->SetStats(0); HistList->Add(qgem_f125_xVSamp);
-  urw_f125_x_amp2d = new TH2F("urw_f125_x_amp2d","uRWELL-TRD X ADC Amp in Time; Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,120,-0.5,119.5); urw_f125_x_amp2d->SetStats(0); HistList->Add(urw_f125_x_amp2d);
+  urw_f125_x_amp2d = new TH2F("urw_f125_x_amp2d","uRWELL-TRD X ADC Amp in Time (After Selections); Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,120,-0.5,119.5); urw_f125_x_amp2d->SetStats(0); HistList->Add(urw_f125_x_amp2d);
   urw_f125_x_amp2d_max = new TH2F("urw_f125_x_amp2d_max","uRWELL-TRD X Max ADC Amp in Time; Time Response (*8ns) ; X [mm] ",(int)histTime,0.5,histTime+.5,128,-0.2,102.2); urw_f125_x_amp2d_max->SetStats(0); HistList->Add(urw_f125_x_amp2d_max);
   urw_f125_xVSamp = new TH2F("urw_f125_xVSamp","uRWELL-TRD X Channel vs ADC Amp; X Channel; ADC Value",120,-0.5,119.5,410,0.,4100.); urw_f125_xVSamp->SetStats(0); HistList->Add(urw_f125_xVSamp);
-  urw_f125_x_timeVSamp = new TH2F("urw_f125_x_timeVSamp","uRWELL-TRD X ADC Amp in Time; Time Response (*8ns); ADC Value",(int)histTime,0.5,histTime+.5,410,0.,4100.); urw_f125_x_timeVSamp->SetStats(0); HistList->Add(urw_f125_x_timeVSamp);
+  urw_f125_x_timeVSamp = new TH2F("urw_f125_x_timeVSamp","uRWELL-TRD X ADC Amp in Time (After Selections); Time Response (*8ns); ADC Value",(int)histTime,0.5,histTime+.5,410,0.,4100.); urw_f125_x_timeVSamp->SetStats(0); HistList->Add(urw_f125_x_timeVSamp);
   urw_f125_x_timeVSamp_max = new TH2F("urw_f125_x_timeVSamp_max","uRWELL-TRD X Max ADC Amp in Time; Time Response (*8ns); ADC Value",(int)histTime,0.5,histTime+.5,410,0.,4100.); urw_f125_x_timeVSamp_max->SetStats(0); HistList->Add(urw_f125_x_timeVSamp_max);
-  mmg1_f125_el_amp2d = new TH2F("mmg1_f125_el_amp2d","MMG1-TRD ADC Amp in Time; Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); mmg1_f125_el_amp2d->SetStats(0); HistList->Add(mmg1_f125_el_amp2d);
+  mmg1_f125_el_amp2d = new TH2F("mmg1_f125_el_amp2d","MMG1-TRD ADC Amp in Time (After Selections); Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); mmg1_f125_el_amp2d->SetStats(0); HistList->Add(mmg1_f125_el_amp2d);
   mmg1_f125_el_amp2d_max = new TH2F("mmg1_f125_el_amp2d_max","MMG1-TRD Max ADC Amp in Time; Time Response (*8ns) ; X [mm] ",(int)histTime,0.5,histTime+.5,128,-0.2,102.2); mmg1_f125_el_amp2d_max->SetStats(0); HistList->Add(mmg1_f125_el_amp2d_max);
   mmg1_f125_xVSamp = new TH2F("mmg1_f125_xVSamp","MMG1-TRD X Channel vs ADC Amp; X Channel; ADC Value",240,-0.5,239.5,410,0.,4100.); mmg1_f125_xVSamp->SetStats(0); HistList->Add(mmg1_f125_xVSamp);
   mmg1_f125_timeVSamp = new TH2F("mmg1_f125_timeVSamp","MMG1-TRD X ADC Amp in Time; Time Response (*8ns); ADC Value",(int)histTime,0.5,histTime+.5,410,0.,4100.); mmg1_f125_timeVSamp->SetStats(0); HistList->Add(mmg1_f125_timeVSamp);
@@ -316,11 +317,11 @@ void trdclass_ps25::Loop() {
   urw_f125_y_amp2d_max = new TH2F("urw_f125_y_amp2d_max","uRWELL-TRD Y Max ADC Amp in Time; Time Response (*8ns) ; Y [mm] ",(int)histTime,0.5,histTime+.5,128,-0.2,102.2); urw_f125_y_amp2d_max->SetStats(0); HistList->Add(urw_f125_y_amp2d_max);
   urw_f125_yVSamp = new TH2F("urw_f125_yVSamp","uRWELL-TRD Y Channel vs ADC Amp; Y Channel; ADC Value",120,-0.5,119.5,410,0.,4100.); urw_f125_yVSamp->SetStats(0); HistList->Add(urw_f125_yVSamp);
   
-  f125_el_amp2ds = new TH2F("f125_el_amp2ds","Triple GEM-TRD ADC Amp in Time; Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); f125_el_amp2ds->SetStats(0); HistList->Add(f125_el_amp2ds);
-  qgem_f125_el_amp2ds = new TH2F("qgem_f125_el_amp2ds","Quad GEM-TRD ADC Amp in Time; Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); qgem_f125_el_amp2ds->SetStats(0); HistList->Add(qgem_f125_el_amp2ds);
-  urw_f125_x_amp2ds = new TH2F("urw_f125_x_amp2ds","uRWELL-TRD X ADC Amp in Time; Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,120,-0.5,119.5); urw_f125_x_amp2ds->SetStats(0); HistList->Add(urw_f125_x_amp2ds);
-  mmg1_f125_el_amp2ds = new TH2F("mmg1_f125_el_amp2ds","MMG1-TRD ADC Amp in Time; Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); mmg1_f125_el_amp2ds->SetStats(0); HistList->Add(mmg1_f125_el_amp2ds);
-  urw_f125_y_amp2ds = new TH2F("urw_f125_y_amp2ds","uRWELL-TRD Y ADC Amp in Time; Time Response (*8ns) ; Y Channel ",(int)histTime,0.5,histTime+.5,120,-0.5,119.5); urw_f125_y_amp2ds->SetStats(0); HistList->Add(urw_f125_y_amp2ds);
+  f125_el_amp2ds = new TH2F("f125_el_amp2ds","Triple GEM-TRD ADC Amp in Time (Before Selections); Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); f125_el_amp2ds->SetStats(0); HistList->Add(f125_el_amp2ds);
+  qgem_f125_el_amp2ds = new TH2F("qgem_f125_el_amp2ds","Quad GEM-TRD ADC Amp in Time (Before Selections); Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); qgem_f125_el_amp2ds->SetStats(0); HistList->Add(qgem_f125_el_amp2ds);
+  urw_f125_x_amp2ds = new TH2F("urw_f125_x_amp2ds","uRWELL-TRD X ADC Amp in Time (Before Selections); Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,120,-0.5,119.5); urw_f125_x_amp2ds->SetStats(0); HistList->Add(urw_f125_x_amp2ds);
+  mmg1_f125_el_amp2ds = new TH2F("mmg1_f125_el_amp2ds","MMG1-TRD ADC Amp in Time (Before Selections); Time Response (*8ns) ; X Channel ",(int)histTime,0.5,histTime+.5,240,-0.5,239.5); mmg1_f125_el_amp2ds->SetStats(0); HistList->Add(mmg1_f125_el_amp2ds);
+  urw_f125_y_amp2ds = new TH2F("urw_f125_y_amp2ds","uRWELL-TRD Y ADC Amp in Time (Before Selections); Time Response (*8ns) ; Y Channel ",(int)histTime,0.5,histTime+.5,120,-0.5,119.5); urw_f125_y_amp2ds->SetStats(0); HistList->Add(urw_f125_y_amp2ds);
 
   //-- 2D Hit Displays --
   htgem_xy = new TH2F("htgem_xy","Triple GEM-TRD X-Y Hit Display; X (fADC) [mm]; Y (SRS) [mm] ",256,-0.2,102.2,256,-0.2,102.2); htgem_xy->SetStats(0);  HistList->Add(htgem_xy);
@@ -907,7 +908,7 @@ void trdclass_ps25::Loop() {
             tgem_residualscorr->Fill((gemChan_x-gem_extr)-gem_correction);
             tgem_residual_ch->Fill(gemChan_x, (gemChan_x-gem_extr-gem_correction));
             gem_trk_hit=0;
-            if (abs(gemChan_x-gem_extr-gem_correction)<10) { //within 10 mm
+            if (abs(gemChan_x-gem_extr-gem_correction)<=5.) { //within 10 mm
               Count ("gem_trk_hit");
               if (!match) {
                 f125_el_tracker_eff->Fill(gem_extr);
@@ -924,7 +925,7 @@ void trdclass_ps25::Loop() {
             mmg1_residualscorr->Fill((mmg1Chan_x-mmg1_extr)-mmg1_correction);
             mmg1_residual_ch->Fill(mmg1Chan_x, (mmg1Chan_x-mmg1_extr)-mmg1_correction);
             mmg1_trk_hit=0;
-            if (abs(mmg1Chan_x-mmg1_extr-mmg1_correction)<10) { //within 10 mm
+            if (abs(mmg1Chan_x-mmg1_extr-mmg1_correction)<=5.) { //within 10 mm
               Count ("mmg1_trk_hit");
               if (!match_mmg1) {
                 mmg1_f125_el_tracker_eff->Fill(mmg1_extr);
@@ -941,7 +942,7 @@ void trdclass_ps25::Loop() {
             urw_x_residualscorr->Fill((urwChan_x-urw_extr)-urw_correction);
             urw_x_residual_ch->Fill(urwChan_x, (urwChan_x-urw_extr-urw_correction));
             urw_trk_hit=0;
-            if (abs(urwChan_x-urw_extr-urw_correction)<10) { //within 10 mm
+            if (abs(urwChan_x-urw_extr-urw_correction)<=5.) { //within 10 mm
               Count ("urw_trk_hit");
               if (!match_urw) {
                 urw_f125_x_tracker_eff->Fill(urw_extr);
@@ -1014,7 +1015,7 @@ void trdclass_ps25::Loop() {
        	int fADCSlot = f125_pulse_slot->at(i);
        	int fADCChan = f125_pulse_channel->at(i);
        	
-        if (RunNum<6154 && time>177.) continue;
+        if (/*RunNum<6154 && */time>177.) continue;
         
         int tripGemChan = Get3GEMChan(fADCChan, fADCSlot, RunNum);
         float tripGemChan_x = tripGemChan*0.4+3.2; // to [mm]
@@ -1097,7 +1098,7 @@ void trdclass_ps25::Loop() {
       
       //-- SET EXTERNAL TRACKING REQUIREMENT --
       //if (USE_MAX_TRD_HITS) {
-      if (USE_MAX_TRACKER_HITS) {
+      //if (USE_MAX_TRACKER_HITS) {
       //if (USE_TRD_XCORR) {
       
       //if (tgem_ampmax>TGEM_THRESH && (mmg1_ampmax>MMG1_THRESH || qgem_ampmax>QGEM_THRESH)) { //JUNK, FOR TESTING
@@ -1112,7 +1113,7 @@ void trdclass_ps25::Loop() {
       	int fADCSlot = f125_pulse_slot->at(i);
       	int fADCChan = f125_pulse_channel->at(i);
       	
-        if (RunNum<6154 && time>177.) continue;
+        if (/*RunNum<6154 &&*/ time>177.) continue;
         
       	int tripGemChan = Get3GEMChan(fADCChan, fADCSlot, RunNum);
       	double tripGemChan_x = tripGemChan*0.4 + 3.2;
@@ -1129,11 +1130,12 @@ void trdclass_ps25::Loop() {
       	
       	if (tripGemChan>-1 && amp>TGEM_THRESH) {
           f125_fit->Fill(time,tripGemChan,amp);
-          if (67.<=time && time<=147./* && (abs(mmg1_xchanmax - (tripGemChan_x-9.12579))<3. || abs(urw_xchanmax - (tripGemChan_x-14.0551))<3.)*/) {
+          if (67.<=time && time<=147. && (abs(mmg1_xchanmax-(tripGemChan_x*0.908525-9.22087))<5. && abs(urw_xchanmax*0.881493-tripGemChan_x-7.886)<5.)) {
             tgem_pos_x[tgem_idx_x] = tripGemChan_x;
             tgem_amp_x[tgem_idx_x] = amp;
             tgem_idx_x++;
           } //else { tgem_pos_x[i]=-1000.; tgem_amp_x[i]=-1000.; tgem_idx_x++; }
+            if (abs(mmg1_xchanmax-(tripGemChan_x*0.908525-9.12579))<5. && abs(urw_xchanmax*0.881493-tripGemChan_x-7.886)<5.) { //-- Within 5mm
             hgemPulseDiff_el->Fill(mmg1_xchanmax-((tripGemChan_x*0.908525)-9.12579));
       	    f125_el->Fill(amp);
             f125_el_amp2d->Fill(time,tripGemChan,amp);
@@ -1144,6 +1146,7 @@ void trdclass_ps25::Loop() {
       	    tgem_zpos.push_back(time);
       	    tgem_nhit++;
       	    tgem_zHist->Fill(time,amp);
+            }
     	  } //else { tgem_pos_x[i]=-1000.; tgem_amp_x[i]=-1000.; tgem_idx_x++; }
         if (amp>QGEM_THRESH && quadGemChan>-1) {
             qgem_f125_fit->Fill(time,quadGemChan,amp);
@@ -1161,12 +1164,13 @@ void trdclass_ps25::Loop() {
         } //else { qgem_pos_x[i]=-1000.; qgem_amp_x[i]=-1000.; qgem_idx_x++; }
     	  if (amp>MMG1_THRESH && mmg1Chan>-1) {
             mmg1_f125_fit->Fill(time,mmg1Chan,amp);
-            if (52.<=time && time<=152. /*&& (abs(tgem_xchanmax - (mmg1Chan_x-9.12579))<3. || abs(urw_xchanmax - (mmg1Chan_x+18.4591)))<3.*/) {
+            if (52.<=time && time<=152. && (abs(tgem_xchanmax*0.908525-mmg1Chan_x-9.12579)<5. && abs(urw_xchanmax*0.829002-mmg1Chan_x-18.4591))<5.) {
               mmg1_pos_x[mmg1_idx_x] = mmg1Chan_x;
               mmg1_amp_x[mmg1_idx_x] = amp;
               mmg1_idx_x++;
           } //else { mmg1_pos_x[i]=-1000.; mmg1_amp_x[i]=-1000.; mmg1_idx_x++; }
-            hmmg1PulseDiff_el->Fill((tgem_xchanmax*0.908525)-mmg1Chan_x-9.12579);
+            if (abs(tgem_xchanmax*0.908525-mmg1Chan_x-9.12579)<5. && abs(urw_xchanmax*0.829002-mmg1Chan_x-18.4591)<5.) { //-- Within 5mm
+            hmmg1PulseDiff_el->Fill(tgem_xchanmax*0.908525-mmg1Chan_x-9.12579);
       	    mmg1_f125_el_amp2d->Fill(time,mmg1Chan,amp);
             mmg1_f125_xVSamp->Fill(mmg1Chan,amp);
             mmg1_f125_timeVSamp->Fill(time,amp);
@@ -1176,16 +1180,18 @@ void trdclass_ps25::Loop() {
       	    mmg1_zpos.push_back(time);
       	    mmg1_nhit++;
       	    mmg1_zHist->Fill(time,amp);
+            }
         } //else { mmg1_pos_x[i]=-1000.; mmg1_amp_x[i]=-1000.; mmg1_idx_x++; }
         if (amp>URW_THRESH && urwXChan>-1) {
             urw_f125_fit->Fill(time,urwXChan,amp);
-            if (47.<=time && time<=140. /*&& (abs(tgem_xchanmax - (urwChan_x-14.0551))<3. || abs(mmg1_xchanmax - (urwChan_x-18.4591)))<3.*/) {
+            if (50.<=time && time<=140. && (abs(urwChan_x*0.881493-7.886-tgem_xchanmax)<5. && abs(urwChan_x*0.829002-mmg1_xchanmax-18.4591))<5.) {
               urw_pos_x[urw_idx_x] = urwChan_x;
               urw_amp_x[urw_idx_x] = amp; 
               urw_idx_x++;
             } //else { urw_pos_x[i]=-1000.; urw_amp_x[i]=-1000.; urw_idx_x++; }
-            hurwPulseDiff_el->Fill((tgem_xchanmax*0.881493)-(urwChan_x-7.886));
-            hurwPulseDiff_mmg->Fill(mmg1_xchanmax-((urwChan_x*0.829002)-18.4385));
+            if (abs(urwChan_x*0.881493-tgem_xchanmax-7.886)<5. && abs(urwChan_x*0.829002-mmg1_xchanmax-18.4591)<5.) {
+            hurwPulseDiff_el->Fill(urwChan_x*0.881493-7.886-tgem_xchanmax);
+            hurwPulseDiff_mmg->Fill(urwChan_x*0.829002-mmg1_xchanmax-18.4385);
             urw_f125_x_amp2d->Fill(time,urwXChan,amp);
             urw_f125_xVSamp->Fill(urwXChan,amp);
             urw_f125_x_timeVSamp->Fill(time,amp);
@@ -1195,26 +1201,27 @@ void trdclass_ps25::Loop() {
             urw_zpos.push_back(time);
             urw_nxhit++;
             urw_zHist->Fill(time,amp);
-            
+            }
         }  //else { urw_pos_x[i]=-1000.; urw_amp_x[i]=-1000.; urw_idx_x++; }
         if (amp>URW_THRESH && urwYChan>-1) {
-            if (47.<=time && time<=140. /*&& (abs(tgem_xchanmax - (urwChan_x+14.0551))<3. || abs(mmg1_xchanmax - (urwChan_x-18.4591)))<3.*/) {
+            if (50.<=time && time<=140. && (abs(urwChan_x*0.881493-tgem_xchanmax-7.886)<5. || abs(urwChan_x*0.829002-mmg1_xchanmax-18.4591)<5.)) {
               urw_pos_y[urw_idx_y] = urwChan_y;
               urw_amp_y[urw_idx_y] = amp;
               urw_idx_y++;
-            } else { urw_pos_y[i]=-1000.; urw_amp_y[i]=-1000.; urw_idx_y++; }
+            } //else { urw_pos_y[i]=-1000.; urw_amp_y[i]=-1000.; urw_idx_y++; }
+            if (abs(urwChan_x*0.881493-tgem_xchanmax-7.886)<5. || abs(urwChan_x*0.829002-mmg1_xchanmax-18.4591)<5.) {
             urw_f125_y_amp2d->Fill(time,urwYChan,amp);
             urw_f125_yVSamp->Fill(urwYChan,amp);
             urw_f125_el_y->Fill(amp);
             //urw_ypos.push_back(urwYChan);
-            urw_dedx.push_back(amp);
-            urw_zpos.push_back(time);
+            //urw_dedx.push_back(amp);
+            //urw_zpos.push_back(time);
             urw_nyhit++;
-            urw_zHist->Fill(time,amp);
-            
+            //urw_zHist->Fill(time,amp);
+            }
         }   //else { urw_pos_y[i]=-1000.; urw_amp_y[i]=-1000.; urw_idx_y++; }
     	} //--- end Fa125 Pulse Loop ---
-      }
+      //} //END Selection
       
       //==================== Max Amplitude histos ============================
         if (tgem_ampmax>TGEM_THRESH) {
@@ -2280,19 +2287,20 @@ void trdclass_ps25::Loop() {
     
    //---------------------  page 3a --------------------
     htitle("  GEM-TRD (fa125) Amp 2D");    if (!COMPACT) cc=NextPlot(0,0);
-    cc=NextPlot(nxd,nyd);   f125_el_amp2d->Draw("colz");
     cc=NextPlot(nxd,nyd);   f125_el_amp2ds->Draw("colz");
+    cc=NextPlot(nxd,nyd);   f125_el_amp2d->Draw("colz");
     if (RunNum<runSwitch) {
-      cc=NextPlot(nxd,nyd);   qgem_f125_el_amp2d->Draw("colz");
       cc=NextPlot(nxd,nyd);   qgem_f125_el_amp2ds->Draw("colz");
+      cc=NextPlot(nxd,nyd);   qgem_f125_el_amp2d->Draw("colz");
+      
     } else {
-      cc=NextPlot(nxd,nyd);   mmg1_f125_el_amp2d->Draw("colz");
       cc=NextPlot(nxd,nyd);   mmg1_f125_el_amp2ds->Draw("colz");
+      cc=NextPlot(nxd,nyd);   mmg1_f125_el_amp2d->Draw("colz");
     }
-    cc=NextPlot(nxd,nyd);   urw_f125_x_amp2d->Draw("colz");
     cc=NextPlot(nxd,nyd);   urw_f125_x_amp2ds->Draw("colz");
-    cc=NextPlot(nxd,nyd);   urw_f125_y_amp2d->Draw("colz");
+    cc=NextPlot(nxd,nyd);   urw_f125_x_amp2d->Draw("colz");
     cc=NextPlot(nxd,nyd);   urw_f125_y_amp2ds->Draw("colz");
+    cc=NextPlot(nxd,nyd);   urw_f125_y_amp2d->Draw("colz");
     
     htitle("  Amplitude vs Channel, 2D");    if (!COMPACT) cc=NextPlot(0,0);
     cc=NextPlot(nxd,nyd);   f125_xVSamp->Draw("colz");
