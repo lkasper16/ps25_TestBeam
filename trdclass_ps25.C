@@ -31,10 +31,12 @@ int timeSwitchRun2=6210; //RunNum where timing window was changed back to 200
 int runAluminum=6357; //Beginning of runs with al cathodes
 double firstTimeWin=200.;
 double secondTimeWin=250.;
+int noRadList[] = {6314,6315,6316,6317,6318,6319,6320,6389,6390,6391,6392,6393,6394};
+int listSize = sizeof(noRadList) / sizeof(noRadList[0]);
 
 //-- For single evt clustering display, uncomment BOTH:
-//#define SHOW_EVTbyEVT
-//#define SHOW_EVT_DISPLAY
+#define SHOW_EVTbyEVT
+#define SHOW_EVT_DISPLAY
 
 void WriteToCSV(std::ofstream &csvFile, float v1, float v2, float v3, float v4, float v5, float v6, float v7, float v8, float v9, float v10) {
   csvFile<<v1<<","<<v2<<","<<v3<<","<<v4<<","<<v5<<","<<v6<<","<<v7<<","<<v8<<","<<v9<<","<<v10<<std::endl;
@@ -206,7 +208,7 @@ void trdclass_ps25::Loop() {
   int mfac=60; //-40
   //if (RunNum>5284.) {nx0=130; mfac=70;} //-- Second Xe bottle
   //cout<<"**************************nx0="<<nx0<<endl;
-  int ny0=256;
+  int ny0=240; //256;
   double Ymin=0.;    double Ymax=ny0*0.4;
   double Xmin=0.;    double Xmax=30.; //double Xmax=26.;
   mhevt  = new TH2F("mhevt","MMG1-TRD Event Display; z pos [mm]; y pos [mm]",nx0+mfac,Xmin,Xmax,ny0,Ymin,Ymax); mhevt->SetStats(0); mhevt->SetMaximum(10.); mhevt->SetMinimum(0.);
@@ -388,9 +390,11 @@ void trdclass_ps25::Loop() {
     EVENT_VECT_GEM->Branch("event_num",&event_num,"event_num/I");
     EVENT_VECT_GEM->Branch("nhit",&tgem_nhit,"tgem_nhit/I");
     EVENT_VECT_GEM->Branch("nclu",&tgem_nclu,"tgem_nclu/I");
+    EVENT_VECT_GEM->Branch("ntracks",&tgem_ntracks,"tgem_ntracks/I");
     EVENT_VECT_GEM->Branch("xpos",&tgem_xpos);
     EVENT_VECT_GEM->Branch("zpos",&tgem_zpos);
     EVENT_VECT_GEM->Branch("dedx",&tgem_dedx);
+    EVENT_VECT_GEM->Branch("parID",&tgem_parID);
     EVENT_VECT_GEM->Branch("zHist",&tgem_zHist_vect);
     EVENT_VECT_GEM->Branch("xposc",&clu_xpos);
     EVENT_VECT_GEM->Branch("zposc",&clu_zpos);
@@ -440,9 +444,11 @@ void trdclass_ps25::Loop() {
     EVENT_VECT_MMG1->Branch("event_num",&event_num,"event_num/I");
     EVENT_VECT_MMG1->Branch("nhit",&mmg1_nhit,"mmg1_nhit/I");
     EVENT_VECT_MMG1->Branch("nclu",&mmg1_nclu,"mmg1_nclu/I");
+    EVENT_VECT_MMG1->Branch("ntracks",&mmg1_ntracks,"mmg1_ntracks/I");
     EVENT_VECT_MMG1->Branch("xpos",&mmg1_xpos);
     EVENT_VECT_MMG1->Branch("zpos",&mmg1_zpos);
     EVENT_VECT_MMG1->Branch("dedx",&mmg1_dedx);
+    EVENT_VECT_MMG1->Branch("parID",&mmg1_parID);
     EVENT_VECT_MMG1->Branch("zHist",&mmg1_zHist_vect);
     EVENT_VECT_MMG1->Branch("xposc",&mmg1_clu_xpos);
     EVENT_VECT_MMG1->Branch("zposc",&mmg1_clu_zpos);
@@ -467,9 +473,11 @@ void trdclass_ps25::Loop() {
     EVENT_VECT_URW->Branch("nxhit",&urw_nxhit,"urw_nxhit/I");
     EVENT_VECT_URW->Branch("nyhit",&urw_nyhit,"urw_nyhit/I");
     EVENT_VECT_URW->Branch("nclu",&urw_nclu,"urw_nclu/I");
+    EVENT_VECT_URW->Branch("ntracks",&urw_ntracks,"urw_ntracks/I");
     EVENT_VECT_URW->Branch("xpos",&urw_xpos);
     EVENT_VECT_URW->Branch("zpos",&urw_zpos);
     EVENT_VECT_URW->Branch("dedx",&urw_dedx);
+    EVENT_VECT_URW->Branch("parID",&urw_parID);
     EVENT_VECT_URW->Branch("zHist",&urw_zHist_vect);
     EVENT_VECT_URW->Branch("xposc",&urw_clu_xpos);
     EVENT_VECT_URW->Branch("zposc",&urw_clu_zpos);
@@ -532,6 +540,7 @@ void trdclass_ps25::Loop() {
     tgem_xpos.clear();
     tgem_zpos.clear();
     tgem_dedx.clear();
+    tgem_parID.clear();
     tgem_zHist->Reset();
     tgem_zHist_vect.clear();
     clu_xpos.clear();
@@ -574,6 +583,7 @@ void trdclass_ps25::Loop() {
     mmg1_xpos.clear();
     mmg1_zpos.clear();
     mmg1_dedx.clear();
+    mmg1_parID.clear();
     mmg1_zHist->Reset();
     mmg1_zHist_vect.clear();
     mmg1_clu_xpos.clear();
@@ -595,6 +605,7 @@ void trdclass_ps25::Loop() {
     urw_xpos.clear();
     urw_zpos.clear();
     urw_dedx.clear();
+    urw_parID.clear();
     urw_zHist->Reset();
     urw_zHist_vect.clear();
     urw_clu_xpos.clear();
@@ -1147,6 +1158,12 @@ void trdclass_ps25::Loop() {
       	    tgem_zpos.push_back(time);
       	    tgem_nhit++;
       	    tgem_zHist->Fill(time,amp);
+            bool foundRun = false;
+            for (int j=0; j<listSize; j++) {
+              if (RunNum==noRadList[j]) {foundRun=true; break;}
+            }
+            if (foundRun==true) {tgem_parID.push_back(0);}
+              else {tgem_parID.push_back(1);}
             }
     	  }
         if (amp>QGEM_THRESH && quadGemChan>-1) {
@@ -1182,6 +1199,12 @@ void trdclass_ps25::Loop() {
       	    mmg1_zpos.push_back(time);
       	    mmg1_nhit++;
       	    mmg1_zHist->Fill(time,amp);
+            bool foundRun = false;
+            for (int j=0; j<listSize; j++) {
+              if (RunNum==noRadList[j]) {foundRun=true; break;}
+            }
+            if (foundRun==true) {mmg1_parID.push_back(0);}
+              else {mmg1_parID.push_back(1);}
             }
         }
         if (amp>URW_THRESH && urwXChan>-1) {
@@ -1203,8 +1226,14 @@ void trdclass_ps25::Loop() {
             urw_zpos.push_back(time);
             urw_nxhit++;
             urw_zHist->Fill(time,amp);
+            bool foundRun = false;
+            for (int j=0; j<listSize; j++) {
+              if (RunNum==noRadList[j]) {foundRun=true; break;}
             }
-        }  //else { urw_pos_x[i]=-1000.; urw_amp_x[i]=-1000.; urw_idx_x++; }
+            if (foundRun==true) {urw_parID.push_back(0);}
+              else {urw_parID.push_back(1);}
+            }
+        }
         if (amp>URW_THRESH && urwYChan>-1) {
             if (50.<=time && time<=140. && (abs(urwChan_x*0.881493-tgem_xchanmax-7.886)<5. || abs(urwChan_x*0.829002-mmg1_xchanmax-18.4591)<5.)) {
               urw_pos_y[urw_idx_y] = urwChan_y;
@@ -1512,6 +1541,7 @@ void trdclass_ps25::Loop() {
             double c1 = hpc->GetBinContent(ix+1,iy+1);                    // energy
             //if (c1>0) cout<<"      *** GEM-TRD CL ENERGY="<<c1<<" FOR ix,iy="<<ix<<endl;
             double x1=double(ix)/double(nx)*(xma-xmi)+xmi+binx/2.;    // drift time
+            //cout<<"***GEM*** nx="<<nx<<" xma="<<xma<<" xmi="<<xmi<<" binx="<<binx<<endl;
             double y1=double(iy)/double(ny)*(yma-ymi)+ymi+biny/2.;    // X strip
             if (c1<THR2) continue;
             if (nclust==0) {
@@ -1557,6 +1587,7 @@ void trdclass_ps25::Loop() {
             double c1 = hmpc->GetBinContent(ix+1,iy+1);                       // energy
             //if (c1>0) cout<<"      *** MMG-TRD CL ENERGY="<<c1<<" FOR ix,iy="<<ix<<endl;
             double x1=double(ix)/double(nmx)*(xmma-xmmi)+xmmi+binmx/2.;   // drift time
+            //cout<<"***MMG1*** nmx="<<nmx<<" xmma="<<xmma<<" xmmi="<<xmmi<<" binmx="<<binmx<<endl;
             double y1=double(iy)/double(nmy)*(ymma-ymmi)+ymmi+binmy/2.;        // X strip
             if (c1<THR2) continue;
             if (mmg1_nclust==0) {
@@ -1628,12 +1659,12 @@ void trdclass_ps25::Loop() {
             //if (abs(mmg1_xchanmax-((clust_Xpos[k]+3.2)*0.908525-9.22087))<5.) {
             //cout<<"EVENT="<<event_num<<" GEM_External_Track_Match="<<match<<" MMG_External_Track_Match="<<match_mmg1<<endl;
             if (match) {
-              //FILL HIT DIFF HISTO
-              hgemClusterDiff_el->Fill(mmg1_xchanmax-((clust_Xpos[k]+3.2)*0.908525-9.22087));
         	    #if (USE_MAXPOS>0)
-	              hits_Xpos[ii]=clust_Xmax[k];
+	              hgemClusterDiff_el->Fill(mmg1_xchanmax-((clust_Xmax[k]+3.2)*0.908525-9.22087));
+                hits_Xpos[ii]=clust_Xmax[k];
 	              hits_Zpos[ii]=clust_Zmax[k];
               #else
+                hgemClusterDiff_el->Fill(mmg1_xchanmax-((clust_Xpos[k]+3.2)*0.908525-9.22087));
                 hits_Xpos[ii]=clust_Xpos[k];
         	      hits_Zpos[ii]=clust_Zpos[k];
               #endif
@@ -1663,10 +1694,15 @@ void trdclass_ps25::Loop() {
           if ((mmg1_clust_Size[k]>=MinClustSize && zStart<mmg1_clust_Zpos[k] && mmg1_clust_Zpos[k]<zEnd && mmg1_clust_Width[k][2]>MinClustWidth) || mmg1_clust_Length[k][2]<MaxClustLength+2.) {
             //if (abs(tgem_xchanmax*0.908525-(mmg1_clust_Xpos[k]+3.2)-9.22087)<5.) {
             if (match_mmg1) {
-              //FILL HIT DIFF HISTO
-              hmmg1ClusterDiff_el->Fill(tgem_xchanmax*0.908525-(mmg1_clust_Xpos[k]+3.2)-9.22087);
-              mmg1_hits_Xpos[mmg1_ii]=mmg1_clust_Xpos[k];
-              mmg1_hits_Zpos[mmg1_ii]=mmg1_clust_Zpos[k];
+              #if (USE_MAXPOS>0)
+                hmmg1ClusterDiff_el->Fill(tgem_xchanmax*0.908525-(mmg1_clust_Xpos[k]+3.2)-9.22087);
+                mmg1_hits_Xpos[mmg1_ii]=mmg1_clust_Xmax[k];
+                mmg1_hits_Zpos[mmg1_ii]=mmg1_clust_Zmax[k];
+              #else
+                hmmg1ClusterDiff_el->Fill(tgem_xchanmax*0.908525-(mmg1_clust_Xmax[k]+3.2)-9.22087);
+                mmg1_hits_Xpos[mmg1_ii]=mmg1_clust_Xpos[k];
+                mmg1_hits_Zpos[mmg1_ii]=mmg1_clust_Zpos[k];
+              #endif
               mmg1_hits_dEdx[mmg1_ii]=mmg1_clust_dEdx[k];
               mmg1_hits_Width[mmg1_ii]=mmg1_clust_Width[k][2];
               mmg1_hits_Length[mmg1_ii]=mmg1_clust_Length[k][2];
@@ -1983,6 +2019,7 @@ void trdclass_ps25::Loop() {
     #ifdef SAVE_TRACK_HITS
       #if USE_CLUST
       tgem_nclu=nhits;
+      tgem_ntracks=NTRACKS;
       for (int n=0; n<nhits; n++) {
         clu_xpos.push_back(hits_Xpos[n]);
         clu_zpos.push_back(hits_Zpos[n]);
@@ -1999,6 +2036,7 @@ void trdclass_ps25::Loop() {
       }
       
       mmg1_nclu=mmg1_nhits;
+      mmg1_ntracks=mmg1_NTRACKS;
       for (int n=0; n<mmg1_nhits; n++) {
         mmg1_clu_xpos.push_back(mmg1_hits_Xpos[n]);
         mmg1_clu_zpos.push_back(mmg1_hits_Zpos[n]);

@@ -345,9 +345,12 @@ public :
    
    int tgem_nhit;
    int tgem_nclu;
+   int tgem_ntracks;
+   
    std::vector <int> tgem_xpos;
    std::vector <float> tgem_zpos;
    std::vector <float> tgem_dedx;
+   std::vector <bool> tgem_parID;
    std::vector <float> tgem_zHist_vect;
    std::vector <float> clu_xpos;
    std::vector <float> clu_zpos;
@@ -393,9 +396,11 @@ public :
    
    int mmg1_nhit;
    int mmg1_nclu;
+   int mmg1_ntracks;
    std::vector <int> mmg1_xpos;
    std::vector <float> mmg1_zpos;
    std::vector <float> mmg1_dedx;
+   std::vector <bool> mmg1_parID;
    std::vector <float> mmg1_zHist_vect;
    TH1F *mmg1_zHist;
    std::vector <float> mmg1_clu_xpos;
@@ -418,9 +423,11 @@ public :
    int urw_nxhit;
    int urw_nyhit;
    int urw_nclu;
+   int urw_ntracks;
    std::vector <int> urw_xpos;
    std::vector <float> urw_zpos;
    std::vector <float> urw_dedx;
+   std::vector <bool> urw_parID;
    std::vector <float> urw_zHist_vect;
    TH1F *urw_zHist;
    std::vector <float> urw_clu_xpos;
