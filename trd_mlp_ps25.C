@@ -34,6 +34,7 @@
 //#define MMG_RUN
 //#define FERMI_NN
 #define NO_RAD_COMPARE 1
+//#define SMALL_AREA
 
 void Count(const char *tit);
 void Count(const char *tit, double cut1);
@@ -346,8 +347,12 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
         case 6302:   tw1=46; tw2=112;  tw3=193; e_chan1=104;   e_chan2=127;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 15cm Fleece
         case 6303:   tw1=46; tw2=112;  tw3=193; e_chan1=102;   e_chan2=127;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 23cm Fleece
         case 6315:   tw1=46; tw2=112;  tw3=193; e_chan1=102;   e_chan2=127;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 23cm Fleece
-*/        
-        default:    tw1=53; tw2=105;  tw3=160; e_chan1=30; e_chan2=130;  pi_chan1=e_chan1; pi_chan2=e_chan2;
+*/      
+        #ifdef SMALL_AREA
+          default:    tw1=53; tw2=105;  tw3=160; e_chan1=130; e_chan2=142;  pi_chan1=e_chan1; pi_chan2=e_chan2;
+        #else
+          default:    tw1=53; tw2=105;  tw3=160; e_chan1=30; e_chan2=130;  pi_chan1=e_chan1; pi_chan2=e_chan2;
+        #endif
         
         #else
 /*        case 6295:   tw1=64; tw2=115; tw3=144; e_chan1=70;   e_chan2=170;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 15cm Fleece
@@ -361,7 +366,11 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
         case 5283:   tw1=61; tw2=90;  tw3=140; e_chan1=106;   e_chan2=133;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 23cm Fleece
         case 5284:   tw1=61; tw2=90;  tw3=140; e_chan1=106;   e_chan2=133;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 23cm Fleece
 */        
-        default:    tw1=51; tw2=105;  tw3=147; e_chan1=72; e_chan2=162;  pi_chan1=e_chan1; pi_chan2=e_chan2;
+        #ifdef SMALL_AREA
+          default:    tw1=51; tw2=105;  tw3=147; e_chan1=130; e_chan2=142;  pi_chan1=e_chan1; pi_chan2=e_chan2;
+        #else
+          default:    tw1=51; tw2=105;  tw3=147; e_chan1=72; e_chan2=162;  pi_chan1=e_chan1; pi_chan2=e_chan2;
+        #endif
         
         #endif
       }
@@ -390,7 +399,7 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
       #else
       type=-1;
       //if(ecal_energy > 4000.) {
-        type=1; ntrk_e++;
+        //type=1; ntrk_e++;
       //} else if(ecal_energy < 400.) {
       //  type=0; ntrk_pi++;
       //}
@@ -439,11 +448,13 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     int ncaver=0;
     #ifdef MMG_RUN
     for (int i=0; i<mmg1_nclu; i++) {
+      float ztimec=zposc->at(i);
+      ztimec = -1.*(ztimec/0.1875)+100.1+100.; // = -1.*(ztimec/0.3)+60.5+100.;
     #else
     for (int i=0; i<tgem_nclu; i++) {
-    #endif
       float ztimec=zposc->at(i);
-      ztimec = -1.*(ztimec/0.3)+60.5+100.; //DOUBLE CHECK TIME OFFSET FOR MMG
+      ztimec = -1.*(ztimec/0.3)+40.15+100.; // = -1.*(ztimec/0.3)+60.5+100.;
+    #endif
       if (tw1 > ztimec || ztimec > tw3) continue;
       clu_xaver+=xposc->at(i); ncaver++;
     }
@@ -498,7 +509,7 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
       Count("mmg1_Clus");
       float ztimec=zposc->at(i);
       //if (RunNum>5284) ztimec = -1.*(ztimec/0.1429)+110.5+100.; //Second Xe bottle
-      /*else*/ ztimec = -1.*(ztimec/0.15)+110.5+100.;
+      /*else*/ ztimec = -1.*(ztimec/0.1875)+100.1+100.;
       //if (tw1 > ztimec || ztimec > tw3) continue;
       Count("mmg1_zClus");
       clu_xaver2+=((xposc->at(i)-clu_xaver)*(xposc->at(i)-clu_xaver));
@@ -530,7 +541,7 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
       Count("Gem_Clus");
       float ztimec=zposc->at(i);
       //if (RunNum>5284) ztimec = -1.*(ztimec/0.2308)+70.5+100.; //Second Xe bottle
-      /*else*/ ztimec = -1.*(ztimec/0.3)+60.5+100.;
+      /*else*/ ztimec = -1.*(ztimec/0.3)+40.15+100.; // = -1.*(ztimec/0.3)+60.5+100.;
       //if (tw1 > ztimec || ztimec > tw3) continue;
       Count("Gem_zClus");
       clu_xaver2+=((xposc->at(i)-clu_xaver)*(xposc->at(i)-clu_xaver));
@@ -1225,6 +1236,8 @@ void trd_mlp_ps25(int RunNum) {
   //---------------------------------------------------------------------
   std::pair<double,double> rej70 = Reject(bg, sig, 0.7);
   cout << "---------------------------------------- \n" << endl;
+  std::pair<double,double> rej75 = Reject(bg, sig, 0.75);
+  cout << "---------------------------------------- \n" << endl; 
   std::pair<double,double> rej80 = Reject(bg, sig, 0.8);
   cout << "---------------------------------------- \n" << endl;
   std::pair<double,double> rej85 = Reject(bg, sig, 0.85);
@@ -1232,17 +1245,17 @@ void trd_mlp_ps25(int RunNum) {
   std::pair<double,double> rej90 = Reject(bg, sig, 0.9);
   cout << "---------------------------------------- \n" << endl;
   
-  double rejectionValues[4] = {rej70.first, rej80.first, rej85.first, rej90.first};
-  double rejErrors[4] = {rej70.second, rej80.second, rej85.second, rej90.second};
+  double rejectionValues[5] = {rej70.first, rej75.first, rej80.first, rej85.first, rej90.first};
+  double rejErrors[5] = {rej70.second, rej75.first, rej80.second, rej85.second, rej90.second};
   for (int i=1; i<=6; i++) {
-    if (i==2) {
+    if (i>=2) {
       hrejection_errors->SetBinContent(i, 1./rejectionValues[i-2]);
       hrejection_errors->SetBinError(i, rejErrors[i-2]*hrejection_errors->GetBinContent(i));
     }
-    if (i>3) {
-      hrejection_errors->SetBinContent(i, 1./rejectionValues[i-3]);
-      hrejection_errors->SetBinError(i, rejErrors[i-3]*hrejection_errors->GetBinContent(i));
-    }
+    //if (i>3) {
+    //  hrejection_errors->SetBinContent(i, 1./rejectionValues[i-3]);
+    //  hrejection_errors->SetBinError(i, rejErrors[i-3]*hrejection_errors->GetBinContent(i));
+    //}
   }
   
   #ifdef VERBOSE
@@ -1265,16 +1278,20 @@ void trd_mlp_ps25(int RunNum) {
   latex.DrawLatex(0.05,ypos-=ystep,str.data());
   //--
   ss.str("");  ss.clear();
-  ss << "Nmod=" << 1 << ", e=80%, Eff #pi=" << rej80.first*100. << "%, Rej=" << 1./rej80.first ;  string str0 = ss.str();
+  ss << "Nmod=" << 1 << ", e=75%, Eff #pi=" << rej75.first*100. << "%, Rej=" << 1./rej75.first ;  string str0 = ss.str();
   latex.DrawLatex(0.05,ypos-=ystep,str0.data());
   //--
-  ss.str("");  ss.clear(); 
-  ss << "Nmod=" << 1 << ", e=85%, Eff #pi=" << rej85.first*100. << "%, Rej=" << 1./rej85.first ;  string str1 = ss.str();
+  ss.str("");  ss.clear();
+  ss << "Nmod=" << 1 << ", e=80%, Eff #pi=" << rej80.first*100. << "%, Rej=" << 1./rej80.first ;  string str1 = ss.str();
   latex.DrawLatex(0.05,ypos-=ystep,str1.data());
   //--
   ss.str("");  ss.clear(); 
-  ss << "Nmod=" << 1 << ", e=90%, Eff #pi=" << rej90.first*100. << "%, Rej=" << 1./rej90.first ;  string str2 = ss.str();
+  ss << "Nmod=" << 1 << ", e=85%, Eff #pi=" << rej85.first*100. << "%, Rej=" << 1./rej85.first ;  string str2 = ss.str();
   latex.DrawLatex(0.05,ypos-=ystep,str2.data());
+  //--
+  ss.str("");  ss.clear(); 
+  ss << "Nmod=" << 1 << ", e=90%, Eff #pi=" << rej90.first*100. << "%, Rej=" << 1./rej90.first ;  string str3 = ss.str();
+  latex.DrawLatex(0.05,ypos-=ystep,str3.data());
   latex.DrawLatex(0.05,ypos-=ystep,"--------------");
   //--
   #ifdef VERBOSE
