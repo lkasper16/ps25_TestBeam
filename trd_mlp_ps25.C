@@ -31,7 +31,7 @@
 #define NN_MODE 3
 //#define VERBOSE
 //#define ANALYZE_MERGED 1
-//#define MMG_RUN
+#define MMG_RUN
 //#define FERMI_NN
 #define NO_RAD_COMPARE 1
 //#define SMALL_AREA
@@ -508,8 +508,7 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     for (int i=0; i<mmg1_nclu; i++) {
       Count("mmg1_Clus");
       float ztimec=zposc->at(i);
-      //if (RunNum>5284) ztimec = -1.*(ztimec/0.1429)+110.5+100.; //Second Xe bottle
-      /*else*/ ztimec = -1.*(ztimec/0.1875)+100.1+100.;
+      ztimec = -1.*(ztimec/0.1875)+100.1+100.;
       //if (tw1 > ztimec || ztimec > tw3) continue;
       Count("mmg1_zClus");
       clu_xaver2+=((xposc->at(i)-clu_xaver)*(xposc->at(i)-clu_xaver));
@@ -540,8 +539,7 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     for (int i=0; i<tgem_nclu; i++) {
       Count("Gem_Clus");
       float ztimec=zposc->at(i);
-      //if (RunNum>5284) ztimec = -1.*(ztimec/0.2308)+70.5+100.; //Second Xe bottle
-      /*else*/ ztimec = -1.*(ztimec/0.3)+40.15+100.; // = -1.*(ztimec/0.3)+60.5+100.;
+      ztimec = -1.*(ztimec/0.3)+40.15+100.; // = -1.*(ztimec/0.3)+60.5+100.;
       //if (tw1 > ztimec || ztimec > tw3) continue;
       Count("Gem_zClus");
       clu_xaver2+=((xposc->at(i)-clu_xaver)*(xposc->at(i)-clu_xaver));
@@ -1044,7 +1042,7 @@ void trd_mlp_ps25(int RunNum) {
   char htit[120]; sprintf(htit,"NN output, Nmod=%d",Nmod);
   TH1F *bgm = new TH1F("bgm",htit, 120, -0.1, 1.1);
   TH1F *sigm = new TH1F("sigm",htit,120, -0.1, 1.1);
-  TH1F *hrejection_errors = new TH1F("hrejection_errors","Rej Factor Relative Error; Electron Purity %; Rejection Factor",6,62.5,92.5); hrejection_errors->SetStats(0);
+  TH1F *hrejection_errors = new TH1F("hrejection_errors","Sup. Factor Relative Error; Electron Efficiency [%]; Suppression Factor",7,62.5,97.5); hrejection_errors->SetStats(0);
   
   //---------------------------------------------------------------------
   //---------           test net                              -----------
@@ -1246,9 +1244,9 @@ void trd_mlp_ps25(int RunNum) {
   cout << "---------------------------------------- \n" << endl;
   
   double rejectionValues[5] = {rej70.first, rej75.first, rej80.first, rej85.first, rej90.first};
-  double rejErrors[5] = {rej70.second, rej75.first, rej80.second, rej85.second, rej90.second};
-  for (int i=1; i<=6; i++) {
-    if (i>=2) {
+  double rejErrors[5] = {rej70.second, rej75.second, rej80.second, rej85.second, rej90.second};
+  for (int i=1; i<7; i++) {
+    if (i>1) {
       hrejection_errors->SetBinContent(i, 1./rejectionValues[i-2]);
       hrejection_errors->SetBinError(i, rejErrors[i-2]*hrejection_errors->GetBinContent(i));
     }

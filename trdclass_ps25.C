@@ -868,7 +868,7 @@ void trdclass_ps25::Loop() {
           int urwXChan = GetRWELLXChan(fADCChan, fADCSlot, RunNum);
         	
         	if (tripGemChan>-1) {
-            //amp = Get3GEMCalib(amp, tripGemChan, RunNum);
+            amp = Get3GEMCalib(amp, tripGemChan, RunNum);
             if (amp>TGEM_THRESH) {
             float gemChan_x = tripGemChan*0.4+3.2; // to [mm]
             float gem_correction = 0.;
@@ -893,7 +893,7 @@ void trdclass_ps25::Loop() {
             }
       	  }
       	  if (amp>MMG1_THRESH && mmg1Chan>-1) {
-            //amp = GetMMGCalib(amp, mmg1Chan, RunNum);
+            amp = GetMMGCalib(amp, mmg1Chan, RunNum);
             if (amp>MMG1_THRESH) {
             float mmg1Chan_x = mmg1Chan*0.4+3.2; //-- to [mm]
             float mmg1_correction = 0.;
@@ -1005,7 +1005,7 @@ void trdclass_ps25::Loop() {
        	float urwChan_y = urwYChan*0.8+3.2; // to [mm]
         
        	if (tripGemChan>-1) {
-          //amp = Get3GEMCalib(amp, tripGemChan, RunNum);
+          amp = Get3GEMCalib(amp, tripGemChan, RunNum);
           if (amp>TGEM_THRESH) {
           f125_el_amp2ds->Fill(time,tripGemChan,amp);
           if (tgem_ampmax<amp) {
@@ -1016,7 +1016,7 @@ void trdclass_ps25::Loop() {
           }
         }
         if (mmg1Chan>-1) {
-          //amp = GetMMGCalib(amp, mmg1Chan, RunNum);
+          amp = GetMMGCalib(amp, mmg1Chan, RunNum);
           if (amp>MMG1_THRESH) {
           mmg1_f125_el_amp2ds->Fill(time,mmg1Chan,amp);
           if (mmg1_ampmax<amp) {
@@ -1094,7 +1094,7 @@ void trdclass_ps25::Loop() {
       	if (amp<0) amp=0;
       	
       	if (tripGemChan>-1) {
-          //amp = Get3GEMCalib(amp, tripGemChan, RunNum);
+          amp = Get3GEMCalib(amp, tripGemChan, RunNum);
           if (amp>TGEM_THRESH) {
             f125_fit->Fill(time,tripGemChan,amp);
             if (67.<=time && time<=147. && (abs(mmg1_xchanmax-(tripGemChan_x*0.908525-9.22087))<5. && abs(urw_xchanmax*0.881493-tripGemChan_x-7.886)<5.)) {
@@ -1124,7 +1124,7 @@ void trdclass_ps25::Loop() {
           }
     	  }
     	  if (mmg1Chan>-1) {
-          //amp = GetMMGCalib(amp, mmg1Chan, RunNum);
+          amp = GetMMGCalib(amp, mmg1Chan, RunNum);
           if (amp>MMG1_THRESH) {
             mmg1_f125_fit->Fill(time,mmg1Chan,amp);
             if (52.<=time && time<=152. && (abs(tgem_xchanmax*0.908525-mmg1Chan_x-9.12579)<5. && abs(urw_xchanmax*0.829002-mmg1Chan_x-18.4591))<5.) {
@@ -1355,7 +1355,7 @@ void trdclass_ps25::Loop() {
           int adc = f125_wraw_samples->at(f125_wraw_samples_index->at(i)+si);
           if (tripGemChan>-1) {
             adc = adc - ped;
-            //adc = Get3GEMCalib(adc, tripGemChan, RunNum);
+            adc = Get3GEMCalib(adc, tripGemChan, RunNum);
             if (adc>4090) printf("!!!!!!!!!!!!!!!!!!!!!! ADC 125 overflow: %d \n",adc);
             if (adc>DEDX_THR) {
               time-=TimeWindowStart;
@@ -1366,7 +1366,7 @@ void trdclass_ps25::Loop() {
           }
           if (mmg1Chan>-1) {
             adc = adc - ped_m;
-            //adc = GetMMGCalib(adc, mmg1Chan, RunNum);
+            adc = GetMMGCalib(adc, mmg1Chan, RunNum);
             if (adc > mDEDX_THR) {
               time-=(TimeWindowStart_m); //+40
               mhevtc->SetBinContent(120-time,mmg1Chan+1,adc/100.);
