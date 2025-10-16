@@ -5,7 +5,7 @@ source /gapps/root/Linux_RHEL7-x86_64-gcc4.8.2/root-6.18.00/bin/thisroot.csh
 # only root needed
 
 RUNNUM=${1-none}
-#MAXEVT=${2-0}
+MAXEVT=${2-0}
 
 if [[ ${RUNNUM} == "none" ]] ; then
     echo "================================="
@@ -17,5 +17,5 @@ fi
 echo "====>  Process RUN=$RUNNUM <=========="
 
 root --web=off -l <<EOC
-.x trd_mlp_ps25.C++(${RUNNUM})
+.x trd_mlp_ps25.C++(${RUNNUM},${MAXEVT})
 EOC

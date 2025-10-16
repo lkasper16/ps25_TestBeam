@@ -31,10 +31,11 @@
 #define NN_MODE 3
 //#define VERBOSE
 //#define ANALYZE_MERGED 1
-#define MMG_RUN
+//#define MMG_RUN
 //#define FERMI_NN
-#define NO_RAD_COMPARE 1
+//#define NO_RAD_COMPARE 1
 //#define SMALL_AREA
+#define ALL_PION_COMPARE 1
 
 void Count(const char *tit);
 void Count(const char *tit, double cut1);
@@ -168,9 +169,9 @@ std::pair<double,double> Reject(TH1 *hp, TH1 *he, double thr) {
 
 //---------------------------------------------------------------------
 #if ANALYZE_MERGED
-int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_tst, TTree *bg_tst, int RunNum, int *rtw1, int *rtw3, int nEntries) {
+int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_tst, TTree *bg_tst, int RunNum, int *rtw1, int *rtw3, int nEntries, int maxEvt) {
 #else
-int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_tst, TTree *bg_tst, int RunNum, int *rtw1, int *rtw3) {
+int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_tst, TTree *bg_tst, int RunNum, int *rtw1, int *rtw3, int maxEvt) {
 #endif
   timer.Start();
   // Set object pointer
@@ -225,8 +226,8 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
   TH2F *hits2d_e = new TH2F("hits2d_e","Electron dEdx in Time;Time (*8ns);Channel",125,0.5,250.5,240,-0.5,239.5);
   TH2F *hits2d_pi = new TH2F("hits2d_pi","Pion dEdx in Time;Time (*8ns);Channel",125,0.5,250.5,240,-0.5,239.5);
   
-  TH2F *clu2d_e = new TH2F("clu2d_e","Electron Cluster dEdx in Time;Time (*8ns);Channel",125,0.5,250.5,240,-0.2,102.2);
-  TH2F *clu2d_pi = new TH2F("clu2d_pi","Pion Cluster dEdx in Time;Time (*8ns);Channel",125,0.5,250.5,240,-0.2,102.2);
+  TH2F *clu2d_e = new TH2F("clu2d_e","Electron Cluster dEdx in Time;Time (*8ns);Channel",125,0.5,250.5,256,-0.2,102.2);
+  TH2F *clu2d_pi = new TH2F("clu2d_pi","Pion Cluster dEdx in Time;Time (*8ns);Channel",125,0.5,250.5,256,-0.2,102.2);
   
   TH2F *aver2d_e = new TH2F("aver2d_e","aver-rms electrons",120,0.,240.,100,0.,10.);
   TH2F *aver2d_pi = new TH2F("aver2d_pi","aver-rms pions",120,0.,240.,100,0.,10.);
@@ -270,11 +271,8 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     cout << " hist: nx=" << nx << " xmi=" << xmi << " xma=" << xma << " noent= " << noent << endl;
   #endif
   Long64_t nentries = ttree_hits->GetEntries();
+  if (maxEvt>1 && maxEvt<=nentries)  nentries = maxEvt;
   Long64_t nbytes = 0;
-  int ntest=nentries*0.25;
-  #ifdef VERBOSE
-    cout << " ntest=" << ntest << endl;
-  #endif
   
   //==============================================================================
   const int NDE=NDEslices;
@@ -284,8 +282,11 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
   int ntrk_e=0, ntrk_pi=0;
   int e_chan1=0;    //-- first TR channel
   int e_chan2=0;    //-- last  TR channel
-  int pi_chan1=0;   //-- first pion (no-rad) channlel
+  int pi_chan1=0;   //-- first pion (no-rad) channel
   int pi_chan2=0;   //-- last  pion (no-rad) channel
+  int tw1=0;
+  int tw2=tw1+1;
+  int tw3=tw2+1;
   
   cout << "============== BEGIN RUN " << RunNum << "===============" <<endl;
   //--------------------------------------------------------------------------------
@@ -303,9 +304,9 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     //                 G E M 
     //------------------------------------------------------------------------------
     
-    int USE_TRACK = 0;
+    //int USE_TRACK = 0;
     float amax2=-1.;
-    float emax2=-1.;
+    //float emax2=-1.;
     float amax2_c=-1;
     
     int khit=0;
@@ -318,15 +319,12 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     float Ascale=40.;
        
     float atot=0.;
-    float etot=0.;
+    //float etot=0.;
     float etrzon=0.;
     float etrzonc=0.;
     
-    int tw1=0;
-    int tw2=tw1+1;
-    int tw3=tw2+1;
     
-    //---- run specific ---
+    //---- run specific timing and channel selectiosn ---
     if ( 6000 < RunNum && RunNum <= 6999 ) { //------------------  PS   2025  ---------------------
       
       Escale=10.;
@@ -341,37 +339,26 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
       
       switch (RunNum) {
         
-        #ifdef MMG_RUN
-/*        case 6295:   tw1=53; tw2=105;  tw3=160; e_chan1=30;   e_chan2=130;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 20cm Fleece
-        case 6296:   tw1=46; tw2=112;  tw3=193; e_chan1=102;   e_chan2=127;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- No Rad
-        case 6302:   tw1=46; tw2=112;  tw3=193; e_chan1=104;   e_chan2=127;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 15cm Fleece
-        case 6303:   tw1=46; tw2=112;  tw3=193; e_chan1=102;   e_chan2=127;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 23cm Fleece
-        case 6315:   tw1=46; tw2=112;  tw3=193; e_chan1=102;   e_chan2=127;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 23cm Fleece
-*/      
-        #ifdef SMALL_AREA
-          default:    tw1=53; tw2=105;  tw3=160; e_chan1=130; e_chan2=142;  pi_chan1=e_chan1; pi_chan2=e_chan2;
-        #else
-          default:    tw1=53; tw2=105;  tw3=160; e_chan1=30; e_chan2=130;  pi_chan1=e_chan1; pi_chan2=e_chan2;
-        #endif
-        
-        #else
-/*        case 6295:   tw1=64; tw2=115; tw3=144; e_chan1=70;   e_chan2=170;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 15cm Fleece
-        case 6296:   tw1=65; tw2=118; tw3=134; e_chan1=112;   e_chan2=127;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 15cm Fleece
-        case 6302:   tw1=65; tw2=118; tw3=134; e_chan1=112;   e_chan2=127;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 15cm Fleece
-        case 6303:   tw1=65; tw2=90;  tw3=141; e_chan1=109;   e_chan2=130;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 15cm Fleece
-        case 6315:   tw1=67; tw2=95;  tw3=141; e_chan1=109;   e_chan2=129;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- No Rad
-        case 6316:   tw1=61; tw2=90;  tw3=140; e_chan1=106;   e_chan2=133;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 15cm Fleece
-        case 5281:   tw1=67; tw2=104; tw3=141; e_chan1=104;   e_chan2=127;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 23cm Fleece
-        case 5282:   tw1=67; tw2=104; tw3=141; e_chan1=104;   e_chan2=129;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 23cm Fleece
-        case 5283:   tw1=61; tw2=90;  tw3=140; e_chan1=106;   e_chan2=133;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 23cm Fleece
-        case 5284:   tw1=61; tw2=90;  tw3=140; e_chan1=106;   e_chan2=133;  pi_chan1=e_chan1; pi_chan2=e_chan2;   break; //-- 23cm Fleece
-*/        
-        #ifdef SMALL_AREA
-          default:    tw1=51; tw2=105;  tw3=147; e_chan1=130; e_chan2=142;  pi_chan1=e_chan1; pi_chan2=e_chan2;
-        #else
-          default:    tw1=51; tw2=105;  tw3=147; e_chan1=72; e_chan2=162;  pi_chan1=e_chan1; pi_chan2=e_chan2;
-        #endif
-        
+        #ifdef MMG_RUN     
+          #if ALL_PION_COMPARE
+            case 6302:   tw1=53; tw2=105;  tw3=160; e_chan1=30;   e_chan2=130;  pi_chan1=102; pi_chan2=127;   break; //-- 23cm Fleece, HG Cu
+            case 6385:   tw1=53; tw2=105;  tw3=160; e_chan1=30;   e_chan2=130;  pi_chan1=102; pi_chan2=127;   break; //-- 23cm Fleece, HG Al
+            
+          #elif SMALL_AREA
+            default:    tw1=53; tw2=105;  tw3=160; e_chan1=130; e_chan2=142;  pi_chan1=e_chan1; pi_chan2=e_chan2;
+          #else
+            default:    tw1=53; tw2=105;  tw3=160; e_chan1=30; e_chan2=130;  pi_chan1=e_chan1; pi_chan2=e_chan2;
+          #endif
+          
+        #else //Triple-GEM        
+          #if ALL_PION_COMPARE
+            case 6302:   tw1=51; tw2=105;  tw3=147; e_chan1=90;   e_chan2=145;  pi_chan1=106; pi_chan2=133;   break; //-- 23cm Fleece, HG Cu
+            case 6385:   tw1=49; tw2=100;  tw3=142; e_chan1=90;   e_chan2=145;  pi_chan1=106; pi_chan2=133;   break; //-- 23cm Fleece, HG Al
+          #elif SMALL_AREA
+            default:    tw1=51; tw2=105;  tw3=147; e_chan1=130; e_chan2=142;  pi_chan1=e_chan1; pi_chan2=e_chan2;
+          #else
+            default:    tw1=51; tw2=105;  tw3=147; e_chan1=72; e_chan2=162;  pi_chan1=e_chan1; pi_chan2=e_chan2;
+          #endif
         #endif
       }
     } else {
@@ -395,14 +382,15 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
             type=0; ntrk_pi++; Count("ntrk_pi");
           }
         }
+      #elif ALL_PION_COMPARE
+        if (parID->size()>0) {
+          if(parID->at(0)==1) {
+            type=1; ntrk_e++; Count("ntrk_e");
+          } else if (parID->at(0)==0) {
+            type=0; ntrk_pi++; Count("ntrk_pi");
+          }
+        }
       #endif
-      #else
-      type=-1;
-      //if(ecal_energy > 4000.) {
-        //type=1; ntrk_e++;
-      //} else if(ecal_energy < 400.) {
-      //  type=0; ntrk_pi++;
-      //}
     #endif
     
     //----------------------------------------------------------------
@@ -421,11 +409,16 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
       int pulse_nhits=mmg1_nhit;
       hNhits->Fill(mmg1_nhit);
       hNclu->Fill(mmg1_nclu);
+      
     #else
-      int clu_nhits=tgem_nclu;
+      tgem_nhit=xpos->size();
+      tgem_nclu=xposc->size();
+      
+    int clu_nhits=tgem_nclu;
       int pulse_nhits=tgem_nhit;
       hNhits->Fill(tgem_nhit);
       hNclu->Fill(tgem_nclu);
+      
     #endif
     float max_widthc=widthc_max;
     float max_dedxc=dedxc_max;
@@ -433,10 +426,20 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     //=================== Loop to calculate average & RMS beam position ========
     double xaver=0, xaver2=0;
     int naver=0;
+    
     #ifdef MMG_RUN
-      for (int i=0;i<mmg1_nhit;i++){ // count fixed parameters 
+      for (int i=0; i<mmg1_nhit; i++) { // fix timing offset between Cern and PS25
+        if (type==0) zpos->at(i) = zpos->at(i)+5.;
+      }
+      
+      for (int i=0; i<mmg1_nhit; i++) { // count fixed parameters 
     #else
-      for (int i=0;i<tgem_nhit;i++){ // count fixed parameters 
+      for (int i=0; i<tgem_nhit; i++) { // fix timing offset between Cern and PS25
+        if (type==0) zpos->at(i) = zpos->at(i)+5.;
+      }
+      
+      for (int i=0; i<tgem_nhit; i++) { // count fixed parameters 
+      //cout<<"******** GEM zpos="<<zpos->at(i)<<", tw1="<<tw1<<", tw3="<<tw3<<endl;
     #endif
       if (tw1 > zpos->at(i) || zpos->at(i) > tw3) continue;
       xaver+=xpos->at(i); naver++;
@@ -447,13 +450,20 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     double clu_xaver=0, clu_xaver2=0;
     int ncaver=0;
     #ifdef MMG_RUN
+    if (type==1) zposc_max = -1.*(zposc_max/0.1875)+100.1+100.;
+    else if (type==0) zposc_max = -1.*(zposc_max/0.1875)+100.1+100.;
     for (int i=0; i<mmg1_nclu; i++) {
       float ztimec=zposc->at(i);
       ztimec = -1.*(ztimec/0.1875)+100.1+100.; // = -1.*(ztimec/0.3)+60.5+100.;
+      //cout<<"***** MMG ztimec="<<ztimec<<", tw1="<<tw1<<", tw3="<<tw3<<endl;
     #else
+    if (type==1) zposc_max = -1.*(zposc_max/0.3)+40.15+100.;
+    else if (type==0) zposc_max = -1.*(zposc_max/0.3)+30.5+100.;
     for (int i=0; i<tgem_nclu; i++) {
       float ztimec=zposc->at(i);
-      ztimec = -1.*(ztimec/0.3)+40.15+100.; // = -1.*(ztimec/0.3)+60.5+100.;
+      if (type==1) ztimec = -1.*(ztimec/0.3)+40.15+100.; // = -1.*(ztimec/0.3)+60.5+100.;
+      else if (type==0) ztimec = -1.*(ztimec/0.3)+30.5+100.;
+      //cout<<"***** GEM ztimec="<<ztimec<<", tw1="<<tw1<<", tw3="<<tw3<<endl;
     #endif
       if (tw1 > ztimec || ztimec > tw3) continue;
       clu_xaver+=xposc->at(i); ncaver++;
@@ -462,32 +472,33 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     
     //====================================================================
     #ifdef MMG_RUN
-      for (int i=0;i<mmg1_nhit;i++) { // count fixed parameters
+      for (int i=0; i<mmg1_nhit; i++) { // count fixed parameters
         Count("mmg1_Hits");
         if (tw1 > zpos->at(i) || zpos->at(i) > tw3) continue;
         Count("mmg1_zHits");
     #else
-      for (int i=0;i<tgem_nhit;i++) { // count fixed parameters 
+      for (int i=0; i<tgem_nhit; i++) { // count fixed parameters 
         Count("Gem_Hits");
+        //cout<<"***** GEM type="<<type<<", zpos="<<zpos->at(i)<<", tw1="<<tw1<<", tw3="<<tw3<<", dedx="<<dedx->at(i)<<endl;
         if (tw1 > zpos->at(i) || zpos->at(i) > tw3) continue;
         Count("Gem_zHits");
     #endif
-    xaver2+=((xpos->at(i)-xaver)*(xpos->at(i)-xaver));
-      if (dedx->at(i)>THR1) {
-        if (type==1) hits2d_e->Fill(zpos->at(i),xpos->at(i),dedx->at(i));
-        else if (type==0) hits2d_pi->Fill(zpos->at(i),xpos->at(i),dedx->at(i));
-      }
-      if(dedx->at(i)>amax2 && tw1<zpos->at(i) && zpos->at(i)<tw3) { //-- tw2 or tw1 ????
-        amax2=dedx->at(i);
-      }
-      if(dedx->at(i)>emax2) {  // currently same as amp
-        emax2=dedx->at(i);
-      }
+        xaver2+=((xpos->at(i)-xaver)*(xpos->at(i)-xaver));
+        if (dedx->at(i)>THR1) {
+          if (type==1) hits2d_e->Fill(zpos->at(i),xpos->at(i),dedx->at(i));
+          else if (type==0) hits2d_pi->Fill(zpos->at(i),xpos->at(i),dedx->at(i));
+        }
+        if(dedx->at(i)>amax2 && tw1<zpos->at(i) && zpos->at(i)<tw3) { //-- tw2 or tw1 ????
+          amax2=dedx->at(i);
+        }
+      //if(dedx->at(i)>emax2) {  // currently same as amp
+      //  emax2=dedx->at(i);
+      //}
       
       if (type>=0 ) {  //-- rad.pos. window OK
         if (tw1<zpos->at(i) && zpos->at(i)<tw3 && dedx->at(i)>THR1) {
           khit++;
-          etot+=dedx->at(i);
+          //etot+=dedx->at(i);
           atot+=dedx->at(i);
           int ibin=(zpos->at(i)-tw1)/dt;
           ibin=min(max(0,ibin),(NDE-1));
@@ -539,7 +550,8 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     for (int i=0; i<tgem_nclu; i++) {
       Count("Gem_Clus");
       float ztimec=zposc->at(i);
-      ztimec = -1.*(ztimec/0.3)+40.15+100.; // = -1.*(ztimec/0.3)+60.5+100.;
+      if (type==1) ztimec = -1.*(ztimec/0.3)+40.15+100.; // = -1.*(ztimec/0.3)+60.5+100.;
+      else if (type==0) ztimec = -1.*(ztimec/0.3)+30.5+100.;
       //if (tw1 > ztimec || ztimec > tw3) continue;
       Count("Gem_zClus");
       clu_xaver2+=((xposc->at(i)-clu_xaver)*(xposc->at(i)-clu_xaver));
@@ -598,7 +610,7 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     //--------------------------------------------------------------------------------
     if (type==1) {
       helectron_maxamp->Fill(amax2);
-      helectron_dedxtotal->Fill(etot);
+      helectron_dedxtotal->Fill(atot);
       helectron_maxcamp->Fill(amax2_c);
     }
     //--------------------------------------------------------------------------------
@@ -606,7 +618,7 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
     //--------------------------------------------------------------------------------
     if (type==0) {
       hpion_maxamp->Fill(amax2);
-      hpion_dedxtotal->Fill(etot);
+      hpion_dedxtotal->Fill(atot);
       hpion_maxcamp->Fill(amax2_c);
     }
     //-----------------------------------------------
@@ -617,21 +629,21 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
       if (MAXpar<(NFixed+NDE)) { printf("ERROR :: MAXpar array too small =%d \n",MAXpar); exit(1); }
       Par[0]=amax2/Ascale/6.;
       Par[1]=pulse_nhits;
-      Par[2]=xaver2*10.;
+      Par[2]=1.;//xaver2*10.;
       Par[3]=NTR*2.;
       Par[4]=max_widthc*5.;
       Par[5]=max_dedxc/Ascale/4.;
       Par[6]=clu_nhits*4.;
-      Par[7]=zposc_max*3.;
+      Par[7]=zposc_max/2.;//*3.;
       Par[8]=dedxc_tot/75.; //dedxc_tot/5.;
       Par[9]=etrzonc/35.; // /40.; //FIX TIME CUTS
-      Par[10]=clu_xaver2*18.;
+      Par[10]=1.;//clu_xaver2*18.;
       Par[11]=amax2_c/30.;
       Par[12]=atot/Escale/75.; //CHECK TO REMOVE
       Par[13]=etrzon/Escale/50.; //CHECK TO REMOVE
       Par[14]=NTRc*4.;
       int np=NDE;
-      double coef=Ascale/2.;
+      double coef=Ascale*4.;//Ascale/2.;
       for (int ip=0; ip<np; ip++) { 
 	      Par[ip+NFixed]=dEdx[ip]/coef; 
       }
@@ -713,21 +725,29 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
   c1=NextPlot(nxd,nyd);   hits2d_e->Draw("colz"); 
   TLine *lin1 = new TLine(0.,e_chan1,250.,e_chan1);    TLine *lin2 = new TLine(0.,e_chan2,250.,e_chan2);
   lin1->SetLineColor(kRed);   lin2->SetLineColor(kRed);   lin1->Draw();  lin2->Draw();
+  TLine *tlin1 = new TLine(tw1,0.,tw1,256.);    TLine *tlin2 = new TLine(tw3,0.,tw3,256.);
+  tlin1->SetLineColor(kRed);  tlin1->SetLineStyle(7);  tlin2->SetLineColor(kRed);  tlin2->SetLineStyle(7);  tlin1->Draw();  tlin2->Draw();
   gPad->Modified(); gPad->Update();
   
   c1=NextPlot(nxd,nyd);   hits2d_pi->Draw("colz");
   TLine *lin1p = new TLine(0.,pi_chan1,250.,pi_chan1); TLine *lin2p = new TLine(0.,pi_chan2,250.,pi_chan2);
   lin1p->SetLineColor(kCyan); lin2p->SetLineColor(kCyan); lin1p->Draw(); lin2p->Draw();
+   TLine *tlin1p = new TLine(tw1,0.,tw1,256.);    TLine *tlin2p = new TLine(tw3,0.,tw3,256.);
+  tlin1p->SetLineColor(kCyan);  tlin1p->SetLineStyle(7);  tlin2p->SetLineColor(kCyan);  tlin2p->SetLineStyle(7);  tlin1p->Draw();  tlin2p->Draw();
   gPad->Modified(); gPad->Update();
   
   c1=NextPlot(nxd,nyd);   clu2d_e->Draw("colz"); 
   TLine *lin1c = new TLine(0.,(e_chan1*0.4)+3.2,250.,(e_chan1*0.4)+3.2);    TLine *lin2c = new TLine(0.,(e_chan2*0.4)+3.2,250.,(e_chan2*0.4)+3.2);
   lin1c->SetLineColor(kRed);   lin2c->SetLineColor(kRed);   lin1c->Draw();  lin2c->Draw();
+   TLine *tlin1c = new TLine(tw1,0.,tw1,102.);    TLine *tlin2c = new TLine(tw3,0.,tw3,102.);
+  tlin1c->SetLineColor(kRed);  tlin1c->SetLineStyle(7);  tlin2c->SetLineColor(kRed);  tlin2c->SetLineStyle(7);  tlin1c->Draw();  tlin2c->Draw();
   gPad->Modified(); gPad->Update();
   
   c1=NextPlot(nxd,nyd);   clu2d_pi->Draw("colz");
   TLine *lin1pc = new TLine(0.,(pi_chan1*0.4)+3.2,250.,(pi_chan1*0.4)+3.2); TLine *lin2pc = new TLine(0.,(pi_chan2*0.4)+3.2,250.,(pi_chan2*0.4)+3.2);
   lin1pc->SetLineColor(kCyan); lin2pc->SetLineColor(kCyan); lin1pc->Draw(); lin2pc->Draw();
+  TLine *tlin1pc = new TLine(tw1,0.,tw1,102.);    TLine *tlin2pc = new TLine(tw3,0.,tw3,102.);
+  tlin1pc->SetLineColor(kCyan);  tlin1pc->SetLineStyle(7);  tlin2pc->SetLineColor(kCyan);  tlin2pc->SetLineStyle(7);  tlin1pc->Draw();  tlin2pc->Draw();
   gPad->Modified(); gPad->Update();
   
   
@@ -778,18 +798,22 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
   
   c0->cd(4);  hits2d_e->Draw("colz");
   lin1->Draw();  lin2->Draw();  
+  tlin1->Draw();  tlin2->Draw();
   gPad->Modified(); gPad->Update();
   
   c0->cd(7);  hits2d_pi->Draw("colz");
   lin1p->Draw(); lin2p->Draw();
+  tlin1p->Draw();  tlin2p->Draw();
   gPad->Modified(); gPad->Update();
   
   c0->cd(5);  clu2d_e->Draw("colz");
   lin1c->Draw();  lin2c->Draw(); 
+  tlin1c->Draw();  tlin2c->Draw();
   gPad->Modified(); gPad->Update();
   
   c0->cd(8);  clu2d_pi->Draw("colz");
-  lin1pc->Draw(); lin2pc->Draw();
+  lin1pc->Draw();  lin2pc->Draw();
+  tlin1pc->Draw();  tlin2pc->Draw();
   gPad->Modified(); gPad->Update();
   
   c0->cd(3);  hscale(helectron_maxcamp,hpion_maxcamp,0.,NORM,2); // --- scale clustering amp  hist here
@@ -816,9 +840,9 @@ int fill_trees(TTree *ttree_hits, TTree *signal, TTree *background, TTree *sig_t
 //==================================================================
 
 #if ANALYZE_MERGED
-void trd_mlp_ps25(int RunNum, int nEntries) {
+void trd_mlp_ps25(int RunNum, int nEntries, int maxEvt) {
 #else
-void trd_mlp_ps25(int RunNum) {
+void trd_mlp_ps25(int RunNum, int maxEvt) {
 #endif
   
   hcount= new TH1D("hcount","Count",3,0,3); 
@@ -836,6 +860,8 @@ void trd_mlp_ps25(int RunNum) {
   char rootfile[256];
   #if NO_RAD_COMPARE
       sprintf(rootfile,"RootOutput/ps25/merged/nrc_trd_singleTrackHits_Run_%06d.root",RunNum);
+  #elif ALL_PION_COMPARE
+      sprintf(rootfile,"RootOutput/ps25/merged/allPi_trd_singleTrackHits_Run_%06d.root",RunNum);
   #elif ANALYZE_MERGED
       sprintf(rootfile,"RootOutput/ps25/merged/trd_singleTrackHits_Run_%06d_%06dEntries.root",RunNum,nEntries);
   #else
@@ -932,9 +958,9 @@ void trd_mlp_ps25(int RunNum) {
   #endif
   int rtw1, rtw3;
   #if ANALYZE_MERGED
-    int nn_mode = fill_trees(ttree_hits, signal, background, sig_tst, bg_tst, RunNum, &rtw1, &rtw3, nEntries);
+    int nn_mode = fill_trees(ttree_hits, signal, background, sig_tst, bg_tst, RunNum, &rtw1, &rtw3, nEntries, maxEvt);
   #else
-    int nn_mode = fill_trees(ttree_hits, signal, background, sig_tst, bg_tst, RunNum, &rtw1, &rtw3);
+    int nn_mode = fill_trees(ttree_hits, signal, background, sig_tst, bg_tst, RunNum, &rtw1, &rtw3, maxEvt);
   #endif
   
   #ifdef VERBOSE
